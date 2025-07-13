@@ -1,0 +1,450 @@
+[
+  {
+    "name": "Acerina",
+    "image": "images/acerina.jpg",
+    "magical_description": "Representa la protección, la estabilidad y la confianza en uno mismo.",
+    "category": "Óxido de hierro",
+    "color": "Negro",
+    "chemical_formula": "Fe₂O₃"
+  },
+  {
+    "name": "Ágata amarilla",
+    "image": "images/agata-amarilla.jpg",
+    "magical_description": "Representa la alegría, la creatividad y el optimismo.",
+    "category": "Calcedonia",
+    "color": "Amarillo",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata azul",
+    "image": "images/agata-azul.jpg",
+    "magical_description": "Representa la serenidad, la comunicación y la claridad de pensamiento.",
+    "category": "Calcedonia",
+    "color": "Azul",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata ceniza",
+    "image": "images/agata-ceniza.jpg",
+    "magical_description": "Representa la estabilidad, la introspección y la conexión a tierra.",
+    "category": "Calcedonia",
+    "color": "Gris",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata cornalina naranja",
+    "image": "images/agata-cornalina-naranja.jpg",
+    "magical_description": "Representa la motivación, la pasión y la vitalidad.",
+    "category": "Calcedonia",
+    "color": "Naranja",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata mixta",
+    "image": "images/agata-mixta.jpg",
+    "magical_description": "Representa la versatilidad, la armonía y el equilibrio de energías.",
+    "category": "Calcedonia",
+    "color": "Multicolor",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata morada",
+    "image": "images/agata-morada.jpg",
+    "magical_description": "Representa la espiritualidad, la intuición y la transformación.",
+    "category": "Calcedonia",
+    "color": "Morado",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata naranja",
+    "image": "images/agata-naranja.jpg",
+    "magical_description": "Representa la creatividad, la energía y el entusiasmo.",
+    "category": "Calcedonia",
+    "color": "Naranja",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata natural",
+    "image": "images/agata-natural.jpg",
+    "magical_description": "Representa la pureza, la sencillez y el equilibrio natural.",
+    "category": "Calcedonia",
+    "color": "Gris",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata negra",
+    "image": "images/agata-negra.jpg",
+    "magical_description": "Representa la protección, la fortaleza y el enfoque.",
+    "category": "Calcedonia",
+    "color": "Negro",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata peridoto",
+    "image": "images/agata-peridoto.jpg",
+    "magical_description": "Representa la abundancia, la regeneración y la suerte.",
+    "category": "Calcedonia",
+    "color": "Verde",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata rosa",
+    "image": "images/agata-rosa.jpg",
+    "magical_description": "Representa el amor, la ternura y la tranquilidad emocional.",
+    "category": "Calcedonia",
+    "color": "Rosa",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata rubí",
+    "image": "images/agata-rubi.jpg",
+    "magical_description": "Representa la pasión, la energía y la determinación.",
+    "category": "Calcedonia",
+    "color": "Rojo",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata verde caliente",
+    "image": "images/agata-verde-caliente.jpg",
+    "magical_description": "Representa la vitalidad, la expansión y la confianza.",
+    "category": "Calcedonia",
+    "color": "Verde",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata verde frío",
+    "image": "images/agata-verde-frio.jpg",
+    "magical_description": "Representa la calma, el crecimiento y el equilibrio.",
+    "category": "Calcedonia",
+    "color": "Verde",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ágata verde",
+    "image": "images/agata-verde.jpg",
+    "magical_description": "Representa la esperanza, la prosperidad y la sanación.",
+    "category": "Calcedonia",
+    "color": "Verde",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Amazonita",
+    "image": "images/amazonita.jpg",
+    "magical_description": "Representa la valentía, la verdad y la calma emocional.",
+    "category": "Feldespato",
+    "color": "Verde azulado",
+    "chemical_formula": "KAlSi₃O₈"
+  },
+  {
+    "name": "Apatita",
+    "image": "images/apatita.jpg",
+    "magical_description": "Representa la comunicación, la creatividad y la motivación.",
+    "category": "Apatita",
+    "color": "Azul",
+    "chemical_formula": "Ca₅(PO₄)₃(F,Cl,OH)"
+  },
+  {
+    "name": "Aragonita blanca",
+    "image": "images/aragonita-blanca.jpg",
+    "magical_description": "Representa la estabilidad, la paciencia y la armonía interior.",
+    "category": "Carbonato",
+    "color": "Blanco",
+    "chemical_formula": "CaCO₃"
+  },
+  {
+    "name": "Aragonita",
+    "image": "images/aragonita.jpg",
+    "magical_description": "Representa la estabilidad, la paciencia y el equilibrio emocional.",
+    "category": "Carbonato",
+    "color": "Marrón",
+    "chemical_formula": "CaCO₃"
+  },
+  {
+    "name": "Calcita azul",
+    "image": "images/calcita-azul.jpg",
+    "magical_description": "Representa la calma, la comunicación y la sanación emocional.",
+    "category": "Carbonato",
+    "color": "Azul",
+    "chemical_formula": "CaCO₃"
+  },
+  {
+    "name": "Calcita óptica",
+    "image": "images/calcita-optica.jpg",
+    "magical_description": "Representa la claridad, la perspectiva y la comprensión espiritual.",
+    "category": "Carbonato",
+    "color": "Transparente",
+    "chemical_formula": "CaCO₃"
+  },
+  {
+    "name": "Cianita azul",
+    "image": "images/cianita-azul.jpg",
+    "magical_description": "Representa la verdad, la comunicación sincera y la armonía interior.",
+    "category": "Silicato de aluminio",
+    "color": "Azul",
+    "chemical_formula": "Al₂SiO₅"
+  },
+  {
+    "name": "Cianita negra",
+    "image": "images/cianita-negra.jpg",
+    "magical_description": "Representa la protección, la conexión con la tierra y la limpieza energética.",
+    "category": "Silicato de aluminio",
+    "color": "Negro",
+    "chemical_formula": "Al₂SiO₅"
+  },
+  {
+    "name": "Cuarzo blanco",
+    "image": "images/cuarzo-blanco.jpg",
+    "magical_description": "Representa la claridad, la energía y la sanación.",
+    "category": "Cuarzo",
+    "color": "Blanco",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo citrino",
+    "image": "images/cuarzo-citrino.jpg",
+    "magical_description": "Representa la prosperidad, la alegría y la vitalidad.",
+    "category": "Cuarzo",
+    "color": "Amarillo",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo limón",
+    "image": "images/cuarzo-limon.jpg",
+    "magical_description": "Representa el optimismo, la creatividad y la claridad mental.",
+    "category": "Cuarzo",
+    "color": "Amarillo",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo morado amatista",
+    "image": "images/cuarzo-morado-ametista.jpg",
+    "magical_description": "Representa la paz, la sabiduría espiritual y la protección.",
+    "category": "Cuarzo",
+    "color": "Morado",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo negro",
+    "image": "images/cuarzo-negro.jpg",
+    "magical_description": "Representa la estabilidad, la protección y la liberación de la negatividad.",
+    "category": "Cuarzo",
+    "color": "Negro",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo ónix negro",
+    "image": "images/cuarzo-onix-negro.jpg",
+    "magical_description": "Representa la fuerza, la protección y el autocontrol.",
+    "category": "Calcedonia",
+    "color": "Negro",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo rosa",
+    "image": "images/cuarzo-rosa.jpg",
+    "magical_description": "Representa el amor, la compasión y la curación emocional.",
+    "category": "Cuarzo",
+    "color": "Rosa",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo rutilado",
+    "image": "images/cuarzo-rutilado.jpg",
+    "magical_description": "Representa la manifestación, la claridad y la transformación espiritual.",
+    "category": "Cuarzo",
+    "color": "Transparente",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Cuarzo verde aventurina",
+    "image": "images/cuarzo-verde-aventurina.jpg",
+    "magical_description": "Representa la prosperidad, la suerte y el crecimiento personal.",
+    "category": "Cuarzo",
+    "color": "Verde",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Dumortierita",
+    "image": "images/dumortierita.jpg",
+    "magical_description": "Representa la paciencia, la confianza en uno mismo y la disciplina.",
+    "category": "Borosilicato",
+    "color": "Azul",
+    "chemical_formula": "Al₇BO₃(SiO₄)₃O₃"
+  },
+  {
+    "name": "Esmeralda",
+    "image": "images/esmeralda.jpg",
+    "magical_description": "Representa la abundancia, el amor y la sabiduría del corazón.",
+    "category": "Berilo",
+    "color": "Verde",
+    "chemical_formula": "Be₃Al₂Si₆O₁₈"
+  },
+  {
+    "name": "Fluorita",
+    "image": "images/fluorita.jpg",
+    "magical_description": "Representa la claridad mental, la concentración y la armonía espiritual.",
+    "category": "Haluro",
+    "color": "Violeta",
+    "chemical_formula": "CaF₂"
+  },
+  {
+    "name": "Granate",
+    "image": "images/granate.jpg",
+    "magical_description": "Representa la pasión, la vitalidad y la seguridad.",
+    "category": "Granate",
+    "color": "Rojo",
+    "chemical_formula": "Fe₃Al₂(SiO₄)₃"
+  },
+  {
+    "name": "Hematita",
+    "image": "images/hematita.jpg",
+    "magical_description": "Representa la protección, la fuerza y el equilibrio energético.",
+    "category": "Óxido de hierro",
+    "color": "Gris",
+    "chemical_formula": "Fe₂O₃"
+  },
+  {
+    "name": "Howlita",
+    "image": "images/howlita.jpg",
+    "magical_description": "Representa la tranquilidad, la paciencia y la sabiduría interior.",
+    "category": "Borato de calcio",
+    "color": "Blanco",
+    "chemical_formula": "Ca₂B₅SiO₉(OH)₅"
+  },
+  {
+    "name": "Jaspe cebra",
+    "image": "images/jaspe-cebra.jpg",
+    "magical_description": "Representa el equilibrio, el optimismo y la conexión con la tierra.",
+    "category": "Calcedonia",
+    "color": "Blanco y negro",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Jaspe madera",
+    "image": "images/jaspe-madera.jpg",
+    "magical_description": "Representa la autoconfianza, la motivación y la estabilidad emocional.",
+    "category": "Calcedonia",
+    "color": "Marrón",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Jaspe piel de leopardo",
+    "image": "images/jaspe-piel-de-leopardo.jpg",
+    "magical_description": "Representa la conexión espiritual, la sanación profunda y la fuerza interior.",
+    "category": "Calcedonia",
+    "color": "Multicolor",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Jaspe vermilio",
+    "image": "images/jaspe-vermilio.jpg",
+    "magical_description": "Representa la vitalidad, el coraje y el arraigo a la tierra.",
+    "category": "Calcedonia",
+    "color": "Rojo",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Morganita",
+    "image": "images/morganita.jpg",
+    "magical_description": "Representa el amor incondicional, la compasión y la sanación del corazón.",
+    "category": "Berilo",
+    "color": "Rosa",
+    "chemical_formula": "Be₃Al₂Si₆O₁₈"
+  },
+  {
+    "name": "Obsidiana negra",
+    "image": "images/obsidiana-negra.jpg",
+    "magical_description": "Representa la protección, la purificación y la verdad interior.",
+    "category": "Vidrio volcánico",
+    "color": "Negro",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ojo de halcón",
+    "image": "images/ojo-de-halcon.jpg",
+    "magical_description": "Representa la visión, la intuición y la claridad interior.",
+    "category": "Cuarzo",
+    "color": "Azul grisáceo",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ojo de tigre",
+    "image": "images/ojo-de-tigre.jpg",
+    "magical_description": "Representa la valentía, la protección y la fuerza de voluntad.",
+    "category": "Cuarzo",
+    "color": "Marrón dorado",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ónix azul",
+    "image": "images/onix-azul.jpg",
+    "magical_description": "Representa la serenidad, la comunicación y la estabilidad emocional.",
+    "category": "Calcedonia",
+    "color": "Azul",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Ópalo pistachio",
+    "image": "images/opalo-pistachio.jpg",
+    "magical_description": "Representa la creatividad, la renovación y la esperanza.",
+    "category": "Ópalo",
+    "color": "Verde",
+    "chemical_formula": "SiO₂·nH₂O"
+  },
+  {
+    "name": "Ópalo rosa",
+    "image": "images/opalo-rosa.jpg",
+    "magical_description": "Representa el amor, la ternura y la sanación emocional.",
+    "category": "Ópalo",
+    "color": "Rosa",
+    "chemical_formula": "SiO₂·nH₂O"
+  },
+  {
+    "name": "Ópalo",
+    "image": "images/opalo.jpg",
+    "magical_description": "Representa la creatividad, la inspiración y la pasión.",
+    "category": "Ópalo",
+    "color": "Multicolor",
+    "chemical_formula": "SiO₂·nH₂O"
+  },
+  {
+    "name": "Piedra sangre",
+    "image": "images/piedra-sangre.jpg",
+    "magical_description": "Representa la vitalidad, el coraje y la purificación.",
+    "category": "Calcedonia",
+    "color": "Verde oscuro",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Riolita",
+    "image": "images/riolita.jpg",
+    "magical_description": "Representa la transformación, la creatividad y la evolución personal.",
+    "category": "Roca ígnea",
+    "color": "Verde oliva",
+    "chemical_formula": "SiO₂"
+  },
+  {
+    "name": "Rubí zoisita",
+    "image": "images/rubi-zoisita.jpg",
+    "magical_description": "Representa la pasión, la paciencia y la armonía espiritual.",
+    "category": "Zoisita con rubí",
+    "color": "Verde",
+    "chemical_formula": "Ca₂Al₃(SiO₄)₃(OH) + Al₂O₃"
+  },
+  {
+    "name": "Sodalita",
+    "image": "images/sodalita.jpg",
+    "magical_description": "Representa la lógica, la autenticidad y el equilibrio emocional.",
+    "category": "Feldespatoide",
+    "color": "Azul",
+    "chemical_formula": "Na₈Al₆Si₆O₂₄Cl₂"
+  },
+  {
+    "name": "Turmalina negra",
+    "image": "images/turmalina-negra.jpg",
+    "magical_description": "Representa la protección, la purificación y el arraigo.",
+    "category": "Turmalina",
+    "color": "Negro",
+    "chemical_formula": "NaFe₃Al₆(BO₃)₃Si₆O₁₈(OH)₄"
+  }
+]
