@@ -1,0 +1,31 @@
+# Ignore all target and debug directories in the entire repo
+target/
+**/target/
+debug/
+**/debug/
+
+# Ignore compiled binaries, logs, temporary files
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+*.log
+*.pid
+*.sock
+*~
+
+# Rust-specific backups
+**/*.rs.bk
+
+# IDE/editor configs
+.idea/
+.vscode/
+*.code-workspace
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Optionally ignore Cargo.lock for libraries
+Cargo.lock
