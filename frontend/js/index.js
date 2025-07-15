@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Load gems data from JSON
 async function loadGems() {
   try {
-    const response = await fetch("data/gems-description.json");
+    const response = await fetch("../backend/data/gems-description.json");
     allGems = await response.json();
     filteredGems = [...allGems];
     loading.style.display = "none";
