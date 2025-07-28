@@ -1,35 +1,11 @@
-/* Import the original styles and adapt for Angular component */
+/* Component-specific styles for GemListComponent */
+/* Global styles are now in src/styles.css */
 
-/* Reset and base styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* Component host styling */
 :host {
   display: block;
-  font-family: 'Poppins', sans-serif;
-  background: var(--background-dark);
-  color: var(--text-light);
   min-height: 100vh;
-  overflow-x: hidden;
   position: relative;
-}
-
-:root {
-  --primary-color: #2D1B69;
-  --secondary-color: #4A3C8C;
-  --accent-color: #FFD700;
-  --accent-secondary: #E6B800;
-  --background-dark: #0F0A1F;
-  --background-card: rgba(45, 27, 105, 0.3);
-  --text-light: #F8F8F8;
-  --text-secondary: #B8B8B8;
-  --border-color: rgba(255, 215, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.3);
-  --gradient-primary: linear-gradient(135deg, #2D1B69 0%, #4A3C8C 100%);
-  --gradient-card: linear-gradient(145deg, rgba(45, 27, 105, 0.4) 0%, rgba(74, 60, 140, 0.2) 100%);
 }
 
 /* Animated starry background */
@@ -50,12 +26,6 @@
 @keyframes sparkle {
   from { transform: translateX(0); }
   to { transform: translateX(-200px); }
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 20px;
 }
 
 /* Header */
