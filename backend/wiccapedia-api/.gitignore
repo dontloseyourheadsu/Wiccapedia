@@ -14,6 +14,7 @@ debug/
 *.pid
 *.sock
 *~
+.env
 
 # Rust-specific backups
 **/*.rs.bk
