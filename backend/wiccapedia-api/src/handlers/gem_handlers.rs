@@ -1,9 +1,13 @@
 use actix_web::{web, HttpResponse, Result};
+use actix_multipart::Multipart;
 use std::sync::Arc;
-use tracing::{info, error};
+use tracing::{info, error, warn};
+use futures_util::StreamExt;
+use bytes::Bytes;
 
 use crate::models::{GemFilters, PaginationParams, CreateGemRequest, Gem};
 use crate::traits::GemService;
+use crate::storage::S3Client;
 
 /// Handler for getting paginated gems with filters
 pub async fn get_gems(
@@ -49,27 +53,167 @@ pub async fn get_gem_by_id(
             })))
         }
         Err(e) => {
-            error!("Failed to get gem {}: {}", gem_id, e);
+            error!("Failed to get gem by ID {}: {}", gem_id, e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Failed to retrieve gem",
-                "message": e.to_string()
+                "message": e.to_string(),
+                "id": gem_id
             })))
         }
     }
 }
 
-/// Handler for creating a new gem
+/// Handler for creating a new gem (JSON only, no file upload)
 pub async fn create_gem(
     gem_service: web::Data<Arc<dyn GemService>>,
     gem_data: web::Json<CreateGemRequest>,
 ) -> Result<HttpResponse> {
     info!("POST /api/gems - Creating gem: {}", gem_data.name);
 
-    let gem: Gem = gem_data.into_inner().into();
+    // Convert CreateGemRequest to Gem
+    let gem = Gem::from(gem_data.into_inner());
 
     match gem_service.add_gem(gem).await {
         Ok(created_gem) => {
-            info!("Successfully created gem: {} (ID: {})", created_gem.name, created_gem.id);
+            info!("Successfully created gem: {}", created_gem.name);
+            Ok(HttpResponse::Created().json(created_gem))
+        }
+        Err(e) => {
+            error!("Failed to create gem: {}", e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to create gem",
+                "message": e.to_string()
+            })))
+        }
+    }
+}
+
+/// Handler for creating a new gem with image upload (multipart/form-data)
+pub async fn create_gem_with_image(
+    gem_service: web::Data<Arc<dyn GemService>>,
+    s3_client: web::Data<Arc<S3Client>>,
+    mut payload: Multipart,
+) -> Result<HttpResponse> {
+    info!("POST /api/gems/upload - Creating gem with image upload");
+
+    let mut gem_data: Option<CreateGemRequest> = None;
+    let mut image_data: Option<(Bytes, String)> = None;
+
+    // Process multipart fields
+    while let Some(field) = payload.next().await {
+        let mut field = field?;
+        let field_name = field.name().unwrap_or("unknown").to_string();
+
+        match field_name.as_str() {
+            "image" => {
+                // Handle image upload
+                let content_disposition = field.content_disposition();
+                let content_type = field.content_type()
+                    .map(|ct| ct.to_string())
+                    .unwrap_or_else(|| "image/jpeg".to_string());
+
+                // Validate content type
+                if !content_type.starts_with("image/") {
+                    warn!("Invalid content type for image: {}", content_type);
+                    return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                        "error": "Invalid file type. Only images are allowed.",
+                        "content_type": content_type
+                    })));
+                }
+
+                // Read file data
+                let mut file_data = Vec::new();
+                while let Some(chunk) = field.next().await {
+                    let chunk = chunk?;
+                    if file_data.len() + chunk.len() > 10 * 1024 * 1024 { // 10MB limit
+                        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                            "error": "File too large. Maximum size is 10MB."
+                        })));
+                    }
+                    file_data.extend_from_slice(&chunk);
+                }
+
+                if file_data.is_empty() {
+                    warn!("Empty image file received");
+                    return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                        "error": "Empty image file"
+                    })));
+                }
+
+                image_data = Some((Bytes::from(file_data), content_type));
+                info!("Image data received: {} bytes", image_data.as_ref().unwrap().0.len());
+            }
+            "gem_data" => {
+                // Handle JSON gem data
+                let mut json_data = Vec::new();
+                while let Some(chunk) = field.next().await {
+                    let chunk = chunk?;
+                    json_data.extend_from_slice(&chunk);
+                }
+
+                let json_str = String::from_utf8(json_data).map_err(|e| {
+                    actix_web::error::ErrorBadRequest(format!("Invalid UTF-8 in gem data: {}", e))
+                })?;
+                match serde_json::from_str::<CreateGemRequest>(&json_str) {
+                    Ok(data) => {
+                        gem_data = Some(data);
+                        info!("Gem data received: {}", gem_data.as_ref().unwrap().name);
+                    }
+                    Err(e) => {
+                        error!("Failed to parse gem data: {}", e);
+                        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                            "error": "Invalid gem data format",
+                            "message": e.to_string()
+                        })));
+                    }
+                }
+            }
+            _ => {
+                warn!("Unknown field in multipart: {}", field_name);
+            }
+        }
+    }
+
+    // Validate required data
+    let gem_request = match gem_data {
+        Some(data) => data,
+        None => {
+            return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "error": "Missing gem data in multipart request"
+            })));
+        }
+    };
+
+    // Upload image if provided
+    let image_url = if let Some((file_data, content_type)) = image_data {
+        info!("Uploading image to S3...");
+        match s3_client.upload_image(file_data, &content_type).await {
+            Ok(url) => {
+                info!("Image uploaded successfully: {}", url);
+                url
+            }
+            Err(e) => {
+                error!("Failed to upload image: {}", e);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to upload image",
+                    "message": e.to_string()
+                })));
+            }
+        }
+    } else {
+        // Generate default image filename if no image provided
+        let temp_gem = Gem::from(gem_request.clone());
+        let default_filename = temp_gem.create_image_filename();
+        s3_client.get_image_url(&default_filename)
+    };
+
+    // Create gem with image URL
+    let mut gem = Gem::from(gem_request);
+    gem.image = image_url;
+
+    match gem_service.add_gem(gem).await {
+        Ok(created_gem) => {
+            info!("Successfully created gem with image: {}", created_gem.name);
             Ok(HttpResponse::Created().json(created_gem))
         }
         Err(e) => {
@@ -91,23 +235,12 @@ pub async fn update_gem(
     let gem_id = path.into_inner();
     info!("PUT /api/gems/{} - Updating gem", gem_id);
 
-    // Convert CreateGemRequest to Gem, but preserve the ID from the path
-    let mut gem: Gem = gem_data.into_inner().into();
-    
-    // Parse the ID from the path and set it
-    match uuid::Uuid::parse_str(&gem_id) {
-        Ok(uuid) => gem.id = uuid,
-        Err(_) => {
-            return Ok(HttpResponse::BadRequest().json(serde_json::json!({
-                "error": "Invalid gem ID format"
-            })));
-        }
-    }
+    let updated_gem = Gem::from(gem_data.into_inner());
 
-    match gem_service.update_gem(&gem_id, gem).await {
-        Ok(Some(updated_gem)) => {
-            info!("Successfully updated gem: {} (ID: {})", updated_gem.name, updated_gem.id);
-            Ok(HttpResponse::Ok().json(updated_gem))
+    match gem_service.update_gem(&gem_id, updated_gem).await {
+        Ok(Some(gem)) => {
+            info!("Successfully updated gem: {}", gem.name);
+            Ok(HttpResponse::Ok().json(gem))
         }
         Ok(None) => {
             info!("Gem not found for update: {}", gem_id);
@@ -120,6 +253,149 @@ pub async fn update_gem(
             error!("Failed to update gem {}: {}", gem_id, e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Failed to update gem",
+                "message": e.to_string(),
+                "id": gem_id
+            })))
+        }
+    }
+}
+
+/// Handler for updating an existing gem with image upload
+pub async fn update_gem_with_image(
+    gem_service: web::Data<Arc<dyn GemService>>,
+    s3_client: web::Data<Arc<S3Client>>,
+    path: web::Path<String>,
+    mut payload: Multipart,
+) -> Result<HttpResponse> {
+    let gem_id = path.into_inner();
+    info!("PUT /api/gems/{}/upload - Updating gem with image", gem_id);
+
+    // First, check if gem exists
+    let existing_gem = match gem_service.get_gem_by_id(&gem_id).await {
+        Ok(Some(gem)) => gem,
+        Ok(None) => {
+            return Ok(HttpResponse::NotFound().json(serde_json::json!({
+                "error": "Gem not found",
+                "id": gem_id
+            })));
+        }
+        Err(e) => {
+            error!("Failed to fetch existing gem {}: {}", gem_id, e);
+            return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to fetch gem",
+                "message": e.to_string(),
+                "id": gem_id
+            })));
+        }
+    };
+
+    let mut gem_data: Option<CreateGemRequest> = None;
+    let mut image_data: Option<(Bytes, String)> = None;
+
+    // Process multipart fields (similar to create_gem_with_image)
+    while let Some(field) = payload.next().await {
+        let mut field = field?;
+        let field_name = field.name().unwrap_or("unknown").to_string();
+
+        match field_name.as_str() {
+            "image" => {
+                let content_type = field.content_type()
+                    .map(|ct| ct.to_string())
+                    .unwrap_or_else(|| "image/jpeg".to_string());
+
+                if !content_type.starts_with("image/") {
+                    return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                        "error": "Invalid file type. Only images are allowed.",
+                        "content_type": content_type
+                    })));
+                }
+
+                let mut file_data = Vec::new();
+                while let Some(chunk) = field.next().await {
+                    let chunk = chunk?;
+                    if file_data.len() + chunk.len() > 10 * 1024 * 1024 {
+                        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                            "error": "File too large. Maximum size is 10MB."
+                        })));
+                    }
+                    file_data.extend_from_slice(&chunk);
+                }
+
+                if !file_data.is_empty() {
+                    image_data = Some((Bytes::from(file_data), content_type));
+                }
+            }
+            "gem_data" => {
+                let mut json_data = Vec::new();
+                while let Some(chunk) = field.next().await {
+                    let chunk = chunk?;
+                    json_data.extend_from_slice(&chunk);
+                }
+
+                let json_str = String::from_utf8(json_data).map_err(|e| {
+                    actix_web::error::ErrorBadRequest(format!("Invalid UTF-8 in gem data: {}", e))
+                })?;
+                match serde_json::from_str::<CreateGemRequest>(&json_str) {
+                    Ok(data) => gem_data = Some(data),
+                    Err(e) => {
+                        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                            "error": "Invalid gem data format",
+                            "message": e.to_string()
+                        })));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // Use existing gem data as base, update with provided data
+    let mut updated_gem = existing_gem;
+    if let Some(new_data) = gem_data {
+        updated_gem.name = new_data.name;
+        updated_gem.magical_description = new_data.magical_description;
+        updated_gem.category = new_data.category;
+        updated_gem.color = new_data.color;
+        updated_gem.chemical_formula = new_data.chemical_formula;
+    }
+
+    // Upload new image if provided
+    if let Some((file_data, content_type)) = image_data {
+        // Delete old image if it exists and is not a default
+        if !updated_gem.image.is_empty() && s3_client.image_exists(&updated_gem.image).await {
+            if let Err(e) = s3_client.delete_image(&updated_gem.image).await {
+                warn!("Failed to delete old image: {}", e);
+            }
+        }
+
+        // Upload new image
+        match s3_client.upload_image(file_data, &content_type).await {
+            Ok(url) => updated_gem.image = url,
+            Err(e) => {
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to upload new image",
+                    "message": e.to_string()
+                })));
+            }
+        }
+    }
+
+    // Update gem in database
+    match gem_service.update_gem(&gem_id, updated_gem).await {
+        Ok(Some(gem)) => {
+            info!("Successfully updated gem with image: {}", gem.name);
+            Ok(HttpResponse::Ok().json(gem))
+        }
+        Ok(None) => {
+            Ok(HttpResponse::NotFound().json(serde_json::json!({
+                "error": "Gem not found",
+                "id": gem_id
+            })))
+        }
+        Err(e) => {
+            error!("Failed to update gem: {}", e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to update gem",
                 "message": e.to_string()
             })))
         }
@@ -129,10 +405,21 @@ pub async fn update_gem(
 /// Handler for deleting a gem
 pub async fn delete_gem(
     gem_service: web::Data<Arc<dyn GemService>>,
+    s3_client: web::Data<Arc<S3Client>>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let gem_id = path.into_inner();
     info!("DELETE /api/gems/{}", gem_id);
+
+    // Get gem first to delete associated image
+    if let Ok(Some(gem)) = gem_service.get_gem_by_id(&gem_id).await {
+        // Delete image from S3 if it exists
+        if !gem.image.is_empty() && s3_client.image_exists(&gem.image).await {
+            if let Err(e) = s3_client.delete_image(&gem.image).await {
+                warn!("Failed to delete gem image: {}", e);
+            }
+        }
+    }
 
     match gem_service.delete_gem(&gem_id).await {
         Ok(true) => {
@@ -150,7 +437,8 @@ pub async fn delete_gem(
             error!("Failed to delete gem {}: {}", gem_id, e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Failed to delete gem",
-                "message": e.to_string()
+                "message": e.to_string(),
+                "id": gem_id
             })))
         }
     }
@@ -230,23 +518,20 @@ pub async fn search_gems(
     gem_service: web::Data<Arc<dyn GemService>>,
     query: web::Query<serde_json::Value>,
 ) -> Result<HttpResponse> {
-    let search_term = query
-        .get("q")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let search_term = match query.get("q").and_then(|v| v.as_str()) {
+        Some(term) if !term.is_empty() => term,
+        _ => {
+            return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "error": "Missing or empty search term 'q'"
+            })));
+        }
+    };
 
     info!("GET /api/gems/search?q={}", search_term);
 
-    if search_term.is_empty() {
-        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
-            "error": "Search term is required",
-            "parameter": "q"
-        })));
-    }
-
     match gem_service.search_gems(search_term).await {
         Ok(gems) => {
-            info!("Successfully found {} gems matching '{}'", gems.len(), search_term);
+            info!("Search returned {} gems for term: {}", gems.len(), search_term);
             Ok(HttpResponse::Ok().json(serde_json::json!({
                 "results": gems,
                 "count": gems.len(),

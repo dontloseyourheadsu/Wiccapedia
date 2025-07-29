@@ -111,7 +111,7 @@ impl Gem {
 }
 
 /// DTO for creating a new gem
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct CreateGemRequest {
     pub name: String,
     pub magical_description: String,

@@ -90,12 +90,46 @@ export class GemService {
   }
 
   /**
+   * Create a new gem with image upload
+   */
+  createGemWithImage(gem: CreateGemRequest, imageFile: File): Observable<Gem> {
+    const formData = new FormData();
+    formData.append('gem_data', JSON.stringify(gem));
+    formData.append('image', imageFile);
+
+    return this.http.post<Gem>(`${this.apiEndpoint}/upload`, formData)
+      .pipe(
+        map((createdGem: Gem) => this.processGemImageUrl(createdGem)),
+        tap(() => this.loadMetadata()), // Refresh metadata after creation
+        catchError(this.handleError)
+      );
+  }
+
+  /**
    * Update an existing gem
    */
   updateGem(id: string, gem: CreateGemRequest): Observable<Gem> {
     return this.http.put<Gem>(`${this.apiEndpoint}/${id}`, gem)
       .pipe(
-        map(updatedGem => this.processGemImageUrl(updatedGem)),
+        map((updatedGem: Gem) => this.processGemImageUrl(updatedGem)),
+        tap(() => this.loadMetadata()), // Refresh metadata after update
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Update an existing gem with image upload
+   */
+  updateGemWithImage(id: string, gem: CreateGemRequest, imageFile?: File): Observable<Gem> {
+    const formData = new FormData();
+    formData.append('gem_data', JSON.stringify(gem));
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+
+    return this.http.put<Gem>(`${this.apiEndpoint}/${id}/upload`, formData)
+      .pipe(
+        map((updatedGem: Gem) => this.processGemImageUrl(updatedGem)),
         tap(() => this.loadMetadata()), // Refresh metadata after update
         catchError(this.handleError)
       );

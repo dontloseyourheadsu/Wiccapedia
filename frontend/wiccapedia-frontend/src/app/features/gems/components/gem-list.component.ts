@@ -52,6 +52,11 @@ export class GemListComponent implements OnInit, OnDestroy {
     chemical_formula: new FormControl('')
   });
 
+  // File upload state
+  selectedFile = signal<File | null>(null);
+  filePreview = signal<string | null>(null);
+  uploadProgress = signal<number>(0);
+
   // Pagination state
   private currentCursor: string | null = null;
   private pageSize = 20;
@@ -193,6 +198,9 @@ export class GemListComponent implements OnInit, OnDestroy {
   onCloseAddGemModal(): void {
     this.showAddGemModal.set(false);
     this.addGemForm.reset();
+    this.selectedFile.set(null);
+    this.filePreview.set(null);
+    this.error.set(null);
   }
 
   onAddGem(): void {
@@ -206,19 +214,64 @@ export class GemListComponent implements OnInit, OnDestroy {
         chemical_formula: formValue.chemical_formula!
       };
 
-      this.gemService.createGem(newGem).pipe(
+      const selectedFile = this.selectedFile();
+      const observable = selectedFile 
+        ? this.gemService.createGemWithImage(newGem, selectedFile)
+        : this.gemService.createGem(newGem);
+
+      observable.pipe(
         takeUntil(this.destroy$)
       ).subscribe({
-        next: (createdGem) => {
+        next: (createdGem: Gem) => {
           console.log('Gem created successfully:', createdGem);
           this.onCloseAddGemModal();
           this.loadGems(); // Refresh the list
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error creating gem:', error);
           this.error.set(error.message || 'Failed to create gem');
         }
       });
+    }
+  }
+
+  // File upload methods
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.error.set('Please select a valid image file.');
+        return;
+      }
+
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        this.error.set('File size must be less than 10MB.');
+        return;
+      }
+
+      this.selectedFile.set(file);
+      
+      // Generate preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.filePreview.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onRemoveFile(): void {
+    this.selectedFile.set(null);
+    this.filePreview.set(null);
+    
+    // Clear the file input
+    const fileInput = document.getElementById('gem-image') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
     }
   }
 
