@@ -225,6 +225,30 @@
         </div>
 
         <div class="form-group">
+          <label for="gem-image">Imagen de la gema (opcional)</label>
+          <input
+            type="file"
+            id="gem-image"
+            accept="image/*"
+            (change)="onFileSelected($event)"
+            class="file-input"
+          />
+          @if (filePreview()) {
+          <div class="image-preview">
+            <img [src]="filePreview()" alt="Preview" class="preview-image" />
+            <button
+              type="button"
+              (click)="onRemoveFile()"
+              class="remove-image-btn"
+              title="Remove image"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          }
+        </div>
+
+        <div class="form-group">
           <label for="gem-magical-description">Descripción mágica</label>
           <textarea
             id="gem-magical-description"
