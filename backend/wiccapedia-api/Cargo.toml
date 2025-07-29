@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 actix-web = "4.4"
 actix-cors = "0.7"
+actix-multipart = "0.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
@@ -17,3 +18,21 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 async-trait = "0.1"
 hex = "0.4"
+
+# Database dependencies
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json"] }
+deadpool-postgres = "0.12"
+
+# S3/MinIO client
+aws-sdk-s3 = "1.0"
+aws-config = "1.0"
+aws-credential-types = "1.0"
+
+# Environment and configuration
+dotenvy = "0.15"
+config = "0.14"
+
+# File handling
+mime = "0.3"
+bytes = "1.0"
+futures-util = "0.3"
