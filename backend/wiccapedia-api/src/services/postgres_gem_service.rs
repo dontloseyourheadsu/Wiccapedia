@@ -239,6 +239,37 @@ impl GemService for PostgresGemService {
         }
     }
 
+    async fn update_gem_by_name(&self, name: &str, updated_gem: Gem) -> Result<Option<Gem>> {
+        info!("Updating gem by name: {}", name);
+
+        let row = sqlx::query_as::<_, GemRow>(
+            "UPDATE gems 
+             SET name = $2, image = $3, magical_description = $4, category = $5, color = $6, chemical_formula = $7, updated_at = CURRENT_TIMESTAMP
+             WHERE name = $1
+             RETURNING *"
+        )
+        .bind(name)
+        .bind(&updated_gem.name)
+        .bind(&updated_gem.image)
+        .bind(&updated_gem.magical_description)
+        .bind(&updated_gem.category)
+        .bind(&updated_gem.color)
+        .bind(&updated_gem.chemical_formula)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        match row {
+            Some(row) => {
+                info!("✅ Gem updated successfully by name: {}", name);
+                Ok(Some(row.into()))
+            }
+            None => {
+                warn!("Gem not found for update by name: {}", name);
+                Ok(None)
+            }
+        }
+    }
+
     async fn delete_gem(&self, id: &str) -> Result<bool> {
         info!("Deleting gem: {}", id);
 

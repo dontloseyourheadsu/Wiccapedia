@@ -17,7 +17,7 @@ use storage::S3Client;
 use services::PostgresGemService;
 use handlers::{
     get_gems, get_gem_by_id, create_gem, create_gem_with_image, 
-    update_gem, update_gem_with_image, delete_gem,
+    update_gem, update_gem_with_image, update_gem_by_name, update_gem_image_by_name, delete_gem,
     get_colors, get_categories, get_formulas, search_gems,
     health_check, api_info, serve_gem_image
 };
@@ -78,6 +78,8 @@ async fn main() -> std::io::Result<()> {
                     .route("/{id}", web::get().to(get_gem_by_id))
                     .route("/{id}", web::put().to(update_gem))
                     .route("/{id}/upload", web::put().to(update_gem_with_image))
+                    .route("/name/{name}", web::put().to(update_gem_by_name))
+                    .route("/name/{name}/image", web::patch().to(update_gem_image_by_name))
                     .route("/{id}", web::delete().to(delete_gem))
                     .route("/metadata/colors", web::get().to(get_colors))
                     .route("/metadata/categories", web::get().to(get_categories))
