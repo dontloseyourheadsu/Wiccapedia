@@ -21,6 +21,9 @@ pub trait GemService: Send + Sync {
     /// Update an existing gem
     async fn update_gem(&self, id: &str, gem: Gem) -> Result<Option<Gem>>;
 
+    /// Update an existing gem by name
+    async fn update_gem_by_name(&self, name: &str, gem: Gem) -> Result<Option<Gem>>;
+
     /// Delete a gem
     async fn delete_gem(&self, id: &str) -> Result<bool>;
 

@@ -120,6 +120,12 @@ pub struct CreateGemRequest {
     pub chemical_formula: String,
 }
 
+/// DTO for updating gem image URL
+#[derive(Debug, Deserialize, Clone)]
+pub struct UpdateGemImageRequest {
+    pub image_url: String,
+}
+
 impl From<CreateGemRequest> for Gem {
     fn from(request: CreateGemRequest) -> Self {
         let image_filename = request.name

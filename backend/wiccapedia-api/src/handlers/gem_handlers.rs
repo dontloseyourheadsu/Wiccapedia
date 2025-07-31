@@ -5,7 +5,7 @@ use tracing::{info, error, warn};
 use futures_util::StreamExt;
 use bytes::Bytes;
 
-use crate::models::{GemFilters, PaginationParams, CreateGemRequest, Gem};
+use crate::models::{GemFilters, PaginationParams, CreateGemRequest, UpdateGemImageRequest, Gem};
 use crate::traits::GemService;
 use crate::storage::S3Client;
 
@@ -542,6 +542,104 @@ pub async fn search_gems(
             error!("Failed to search gems: {}", e);
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
                 "error": "Failed to search gems",
+                "message": e.to_string()
+            })))
+        }
+    }
+}
+
+/// Handler for updating an existing gem by name
+pub async fn update_gem_by_name(
+    gem_service: web::Data<Arc<dyn GemService>>,
+    path: web::Path<String>,
+    gem_data: web::Json<CreateGemRequest>,
+) -> Result<HttpResponse> {
+    let name = path.into_inner();
+    info!("PUT /api/gems/name/{} - Updating gem by name", name);
+
+    let mut gem = Gem::from(gem_data.into_inner());
+    
+    // Ensure the gem name matches the path parameter
+    gem.name = name.clone();
+
+    match gem_service.update_gem_by_name(&name, gem).await {
+        Ok(Some(updated_gem)) => {
+            info!("✅ Gem updated successfully by name: {}", name);
+            Ok(HttpResponse::Ok().json(updated_gem))
+        }
+        Ok(None) => {
+            warn!("Gem not found for update by name: {}", name);
+            Ok(HttpResponse::NotFound().json(serde_json::json!({
+                "error": "Gem not found",
+                "name": name
+            })))
+        }
+        Err(e) => {
+            error!("Failed to update gem by name {}: {}", name, e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to update gem",
+                "message": e.to_string()
+            })))
+        }
+    }
+}
+
+/// Handler for updating gem image URL by name
+pub async fn update_gem_image_by_name(
+    gem_service: web::Data<Arc<dyn GemService>>,
+    path: web::Path<String>,
+    image_data: web::Json<UpdateGemImageRequest>,
+) -> Result<HttpResponse> {
+    let name = path.into_inner();
+    let image_url = image_data.image_url.clone();
+    info!("PATCH /api/gems/name/{}/image - Updating gem image URL", name);
+
+    // First get the existing gem
+    match gem_service.get_gems(
+        crate::models::GemFilters {
+            name: Some(name.clone()),
+            ..Default::default()
+        },
+        crate::models::PaginationParams { limit: 1, cursor: None }
+    ).await {
+        Ok(response) => {
+            if let Some(mut existing_gem) = response.data.into_iter().next() {
+                // Update only the image field
+                existing_gem.image = image_url;
+                
+                // Update the gem
+                match gem_service.update_gem_by_name(&name, existing_gem).await {
+                    Ok(Some(updated_gem)) => {
+                        info!("✅ Gem image updated successfully: {}", name);
+                        Ok(HttpResponse::Ok().json(updated_gem))
+                    }
+                    Ok(None) => {
+                        warn!("Gem not found for image update: {}", name);
+                        Ok(HttpResponse::NotFound().json(serde_json::json!({
+                            "error": "Gem not found",
+                            "name": name
+                        })))
+                    }
+                    Err(e) => {
+                        error!("Failed to update gem image {}: {}", name, e);
+                        Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                            "error": "Failed to update gem image",
+                            "message": e.to_string()
+                        })))
+                    }
+                }
+            } else {
+                warn!("Gem not found for image update: {}", name);
+                Ok(HttpResponse::NotFound().json(serde_json::json!({
+                    "error": "Gem not found",
+                    "name": name
+                })))
+            }
+        }
+        Err(e) => {
+            error!("Failed to fetch gem for image update {}: {}", name, e);
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to fetch gem",
                 "message": e.to_string()
             })))
         }
