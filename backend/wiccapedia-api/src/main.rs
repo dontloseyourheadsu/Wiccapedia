@@ -10,11 +10,13 @@ mod utils;
 mod config;
 mod database;
 mod storage;
+mod cache;
 
 use config::AppConfig;
 use database::Database;
 use storage::S3Client;
 use services::PostgresGemService;
+use cache::RedisCache;
 use handlers::{
     get_gems, get_gem_by_id, create_gem, create_gem_with_image, 
     update_gem, update_gem_with_image, update_gem_by_name, update_gem_image_by_name, delete_gem,
@@ -56,6 +58,15 @@ async fn main() -> std::io::Result<()> {
     // Initialize services using dependency injection with traits
     let gem_service: Arc<dyn GemService> = Arc::new(PostgresGemService::new(database.pool().clone()));
     
+    // Initialize Redis cache (optional)
+    let redis_cache = match RedisCache::new(&config.redis).await {
+        Ok(cache) => Some(cache),
+        Err(e) => {
+            eprintln!("Redis cache unavailable: {}. Continuing without cache.", e);
+            None
+        }
+    };
+    
     info!("✅ Services initialized successfully");
 
     // Get server configuration
@@ -68,6 +79,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(gem_service.clone()))
             .app_data(web::Data::new(s3_client.clone()))
+            .app_data(web::Data::new(redis_cache.clone()))
             .wrap(Logger::default())
             .wrap(configure_cors())
             .service(
