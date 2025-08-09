@@ -67,10 +67,24 @@ services:
       echo 'MinIO setup completed';
       "
 
+  redis:
+    image: redis:7-alpine
+    container_name: wiccapedia-redis
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "wiccapedia_redis_password"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - wiccapedia-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     driver: local
   minio_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:
