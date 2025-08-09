@@ -7,17 +7,53 @@ use bytes::Bytes;
 
 use crate::models::{GemFilters, PaginationParams, CreateGemRequest, UpdateGemImageRequest, Gem};
 use crate::traits::GemService;
+use crate::cache::RedisCache;
 use crate::storage::S3Client;
 
 /// Handler for getting paginated gems with filters
 pub async fn get_gems(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     query: web::Query<GemFilters>,
     pagination: web::Query<PaginationParams>,
 ) -> Result<HttpResponse> {
     info!("GET /api/gems - Filters: {:?}, Pagination: {:?}", query, pagination);
 
-    match gem_service.get_gems(query.into_inner(), pagination.into_inner()).await {
+    let filters = query.into_inner();
+    let page = pagination.into_inner();
+
+    if let Some(cache) = redis.as_ref().as_ref() {
+        let version = cache.get_version("gems").await.unwrap_or(1);
+        let key = format!(
+            "v{}:gems:list:limit={}:cursor={}:name={}:color={}:category={}:formula={}:orderby={}",
+            version,
+            page.limit,
+            page.cursor.clone().unwrap_or_default(),
+            filters.name.clone().unwrap_or_default(),
+            filters.color.clone().unwrap_or_default(),
+            filters.category.clone().unwrap_or_default(),
+            filters.chemical_formula.clone().unwrap_or_default(),
+            filters.order_by.clone().unwrap_or_default(),
+        );
+        if let Ok(Some(resp)) = cache.get_json::<crate::models::PaginatedResponse<Gem>>(&key).await {
+            return Ok(HttpResponse::Ok().json(resp));
+        }
+        match gem_service.get_gems(filters.clone(), page.clone()).await {
+            Ok(response) => {
+                let _ = cache.set_json(&key, &response, Some(60)).await;
+                return Ok(HttpResponse::Ok().json(response));
+            }
+            Err(e) => {
+                error!("Failed to get gems: {}", e);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to retrieve gems",
+                    "message": e.to_string()
+                })));
+            }
+        }
+    }
+
+    match gem_service.get_gems(filters, page).await {
         Ok(response) => {
             info!("Successfully retrieved {} gems", response.data.len());
             Ok(HttpResponse::Ok().json(response))
@@ -35,10 +71,39 @@ pub async fn get_gems(
 /// Handler for getting a specific gem by ID
 pub async fn get_gem_by_id(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let gem_id = path.into_inner();
     info!("GET /api/gems/{}", gem_id);
+
+    if let Some(cache) = redis.as_ref().as_ref() {
+        let version = cache.get_version("gems").await.unwrap_or(1);
+        let key = format!("v{}:gems:id:{}", version, gem_id);
+        if let Ok(Some(gem)) = cache.get_json::<Gem>(&key).await {
+            return Ok(HttpResponse::Ok().json(gem));
+        }
+        match gem_service.get_gem_by_id(&gem_id).await {
+            Ok(Some(gem)) => {
+                let _ = cache.set_json(&key, &gem, Some(300)).await;
+                return Ok(HttpResponse::Ok().json(gem));
+            }
+            Ok(None) => {
+                return Ok(HttpResponse::NotFound().json(serde_json::json!({
+                    "error": "Gem not found",
+                    "id": gem_id
+                })));
+            }
+            Err(e) => {
+                error!("Failed to get gem by ID {}: {}", gem_id, e);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to retrieve gem",
+                    "message": e.to_string(),
+                    "id": gem_id
+                })));
+            }
+        }
+    }
 
     match gem_service.get_gem_by_id(&gem_id).await {
         Ok(Some(gem)) => {
@@ -66,6 +131,7 @@ pub async fn get_gem_by_id(
 /// Handler for creating a new gem (JSON only, no file upload)
 pub async fn create_gem(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     gem_data: web::Json<CreateGemRequest>,
 ) -> Result<HttpResponse> {
     info!("POST /api/gems - Creating gem: {}", gem_data.name);
@@ -76,6 +142,7 @@ pub async fn create_gem(
     match gem_service.add_gem(gem).await {
         Ok(created_gem) => {
             info!("Successfully created gem: {}", created_gem.name);
+            if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
             Ok(HttpResponse::Created().json(created_gem))
         }
         Err(e) => {
@@ -92,6 +159,7 @@ pub async fn create_gem(
 pub async fn create_gem_with_image(
     gem_service: web::Data<Arc<dyn GemService>>,
     s3_client: web::Data<Arc<S3Client>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     mut payload: Multipart,
 ) -> Result<HttpResponse> {
     info!("POST /api/gems/upload - Creating gem with image upload");
@@ -214,6 +282,7 @@ pub async fn create_gem_with_image(
     match gem_service.add_gem(gem).await {
         Ok(created_gem) => {
             info!("Successfully created gem with image: {}", created_gem.name);
+            if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
             Ok(HttpResponse::Created().json(created_gem))
         }
         Err(e) => {
@@ -229,6 +298,7 @@ pub async fn create_gem_with_image(
 /// Handler for updating an existing gem
 pub async fn update_gem(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     path: web::Path<String>,
     gem_data: web::Json<CreateGemRequest>,
 ) -> Result<HttpResponse> {
@@ -270,6 +340,7 @@ pub async fn update_gem(
     match gem_service.update_gem(&gem_id, merged).await {
         Ok(Some(gem)) => {
             info!("Successfully updated gem: {}", gem.name);
+            if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
             Ok(HttpResponse::Ok().json(gem))
         }
         Ok(None) => {
@@ -294,6 +365,7 @@ pub async fn update_gem(
 pub async fn update_gem_with_image(
     gem_service: web::Data<Arc<dyn GemService>>,
     s3_client: web::Data<Arc<S3Client>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     path: web::Path<String>,
     mut payload: Multipart,
 ) -> Result<HttpResponse> {
@@ -414,6 +486,7 @@ pub async fn update_gem_with_image(
     match gem_service.update_gem(&gem_id, updated_gem).await {
         Ok(Some(gem)) => {
             info!("Successfully updated gem with image: {}", gem.name);
+            if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
             Ok(HttpResponse::Ok().json(gem))
         }
         Ok(None) => {
@@ -436,6 +509,7 @@ pub async fn update_gem_with_image(
 pub async fn delete_gem(
     gem_service: web::Data<Arc<dyn GemService>>,
     s3_client: web::Data<Arc<S3Client>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let gem_id = path.into_inner();
@@ -454,6 +528,7 @@ pub async fn delete_gem(
     match gem_service.delete_gem(&gem_id).await {
         Ok(true) => {
             info!("Successfully deleted gem: {}", gem_id);
+            if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
             Ok(HttpResponse::NoContent().finish())
         }
         Ok(false) => {
@@ -477,8 +552,30 @@ pub async fn delete_gem(
 /// Handler for getting unique colors
 pub async fn get_colors(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
 ) -> Result<HttpResponse> {
     info!("GET /api/gems/metadata/colors");
+
+    if let Some(cache) = redis.as_ref().as_ref() {
+        let version = cache.get_version("gems").await.unwrap_or(1);
+        let key = format!("v{}:metadata:colors", version);
+        if let Ok(Some(colors)) = cache.get_json::<Vec<String>>(&key).await {
+            return Ok(HttpResponse::Ok().json(serde_json::json!({ "colors": colors })));
+        }
+        match gem_service.get_unique_colors().await {
+            Ok(colors) => {
+                let _ = cache.set_json(&key, &colors, Some(600)).await;
+                return Ok(HttpResponse::Ok().json(serde_json::json!({ "colors": colors })));
+            }
+            Err(e) => {
+                error!("Failed to get colors: {}", e);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to retrieve colors",
+                    "message": e.to_string()
+                })));
+            }
+        }
+    }
 
     match gem_service.get_unique_colors().await {
         Ok(colors) => {
@@ -500,8 +597,30 @@ pub async fn get_colors(
 /// Handler for getting unique categories
 pub async fn get_categories(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
 ) -> Result<HttpResponse> {
     info!("GET /api/gems/metadata/categories");
+
+    if let Some(cache) = redis.as_ref().as_ref() {
+        let version = cache.get_version("gems").await.unwrap_or(1);
+        let key = format!("v{}:metadata:categories", version);
+        if let Ok(Some(categories)) = cache.get_json::<Vec<String>>(&key).await {
+            return Ok(HttpResponse::Ok().json(serde_json::json!({ "categories": categories })));
+        }
+        match gem_service.get_unique_categories().await {
+            Ok(categories) => {
+                let _ = cache.set_json(&key, &categories, Some(600)).await;
+                return Ok(HttpResponse::Ok().json(serde_json::json!({ "categories": categories })));
+            }
+            Err(e) => {
+                error!("Failed to get categories: {}", e);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to retrieve categories",
+                    "message": e.to_string()
+                })));
+            }
+        }
+    }
 
     match gem_service.get_unique_categories().await {
         Ok(categories) => {
@@ -523,8 +642,30 @@ pub async fn get_categories(
 /// Handler for getting unique chemical formulas
 pub async fn get_formulas(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<crate::cache::RedisCache>>>,
 ) -> Result<HttpResponse> {
     info!("GET /api/gems/metadata/formulas");
+
+    if let Some(cache) = redis.as_ref().as_ref() {
+        let version = cache.get_version("gems").await.unwrap_or(1);
+        let key = format!("v{}:metadata:formulas", version);
+        if let Ok(Some(formulas)) = cache.get_json::<Vec<String>>(&key).await {
+            return Ok(HttpResponse::Ok().json(serde_json::json!({ "formulas": formulas })));
+        }
+        match gem_service.get_unique_formulas().await {
+            Ok(formulas) => {
+                let _ = cache.set_json(&key, &formulas, Some(600)).await;
+                return Ok(HttpResponse::Ok().json(serde_json::json!({ "formulas": formulas })));
+            }
+            Err(e) => {
+                error!("Failed to get formulas: {}", e);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to retrieve formulas",
+                    "message": e.to_string()
+                })));
+            }
+        }
+    }
 
     match gem_service.get_unique_formulas().await {
         Ok(formulas) => {
@@ -546,6 +687,7 @@ pub async fn get_formulas(
 /// Handler for searching gems
 pub async fn search_gems(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<RedisCache>>>,
     query: web::Query<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let search_term = match query.get("q").and_then(|v| v.as_str()) {
@@ -558,6 +700,32 @@ pub async fn search_gems(
     };
 
     info!("GET /api/gems/search?q={}", search_term);
+
+    if let Some(cache) = redis.as_ref().as_ref() {
+        let version = cache.get_version("gems").await.unwrap_or(1);
+        let key = format!("v{}:search:q={}", version, search_term);
+        if let Ok(Some(resp)) = cache.get_json::<serde_json::Value>(&key).await {
+            return Ok(HttpResponse::Ok().json(resp));
+        }
+        match gem_service.search_gems(search_term).await {
+            Ok(gems) => {
+                let resp = serde_json::json!({
+                    "results": gems,
+                    "count": gems.len(),
+                    "query": search_term
+                });
+                let _ = cache.set_json(&key, &resp, Some(45)).await;
+                return Ok(HttpResponse::Ok().json(resp));
+            }
+            Err(e) => {
+                error!("Failed to search gems: {}", e);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": "Failed to search gems",
+                    "message": e.to_string()
+                })));
+            }
+        }
+    }
 
     match gem_service.search_gems(search_term).await {
         Ok(gems) => {
@@ -581,6 +749,7 @@ pub async fn search_gems(
 /// Handler for updating an existing gem by name
 pub async fn update_gem_by_name(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<crate::cache::RedisCache>>>,
     path: web::Path<String>,
     gem_data: web::Json<CreateGemRequest>,
 ) -> Result<HttpResponse> {
@@ -624,7 +793,11 @@ pub async fn update_gem_by_name(
     match gem_service.update_gem_by_name(&name, merged).await {
         Ok(Some(updated_gem)) => {
             info!("✅ Gem updated successfully by name: {}", name);
-            Ok(HttpResponse::Ok().json(updated_gem))
+            if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
+            {
+                        if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
+                        Ok(HttpResponse::Ok().json(updated_gem))
+                    }
         }
         Ok(None) => {
             warn!("Gem not found for update by name after merge: {}", name);
@@ -646,6 +819,7 @@ pub async fn update_gem_by_name(
 /// Handler for updating gem image URL by name
 pub async fn update_gem_image_by_name(
     gem_service: web::Data<Arc<dyn GemService>>,
+    redis: web::Data<Option<Arc<crate::cache::RedisCache>>>,
     path: web::Path<String>,
     image_data: web::Json<UpdateGemImageRequest>,
 ) -> Result<HttpResponse> {
@@ -670,7 +844,10 @@ pub async fn update_gem_image_by_name(
                 match gem_service.update_gem_by_name(&name, existing_gem).await {
                     Ok(Some(updated_gem)) => {
                         info!("✅ Gem image updated successfully: {}", name);
+                        {
+                        if let Some(cache) = redis.as_ref().as_ref() { let _ = cache.incr_version("gems").await; }
                         Ok(HttpResponse::Ok().json(updated_gem))
+                    }
                     }
                     Ok(None) => {
                         warn!("Gem not found for image update: {}", name);

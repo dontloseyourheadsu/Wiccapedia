@@ -8,6 +8,7 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub database: DatabaseConfig,
     pub minio: MinioConfig,
+    pub redis: RedisConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -35,6 +36,13 @@ pub struct MinioConfig {
     pub region: String,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct RedisConfig {
+    pub url: String,
+    pub namespace: String,
+    pub default_ttl_seconds: u64,
+}
+
 impl AppConfig {
     pub fn from_env() -> Result<Self, ConfigError> {
         let config = Config::builder()
@@ -57,7 +65,12 @@ impl AppConfig {
             .build()?;
 
         // Override with environment variables if present
-        let mut app_config: AppConfig = config.try_deserialize()?;
+        let mut app_config: AppConfig = config
+            .clone()
+            .set_default("redis.url", "redis://:wiccapedia_redis_password@127.0.0.1:6379/0")?
+            .set_default("redis.namespace", "wiccapedia")?
+            .set_default("redis.default_ttl_seconds", 120)?
+            .try_deserialize()?;
         
         // Database URL from environment
         if let Ok(db_url) = env::var("DATABASE_URL") {
@@ -73,6 +86,20 @@ impl AppConfig {
         }
         if let Ok(secret_key) = env::var("MINIO_SECRET_KEY") {
             app_config.minio.secret_key = secret_key;
+        }
+
+        // Redis configuration from environment
+        if let Ok(url) = env::var("REDIS_URL") {
+            app_config.redis.url = url;
+        }
+        if let Ok(url) = env::var("WICCAPEDIA_REDIS_URL") {
+            app_config.redis.url = url;
+        }
+        if let Ok(ns) = env::var("WICCAPEDIA_REDIS_NAMESPACE") {
+            app_config.redis.namespace = ns;
+        }
+        if let Ok(ttl) = env::var("WICCAPEDIA_REDIS_TTL") {
+            if let Ok(v) = ttl.parse() { app_config.redis.default_ttl_seconds = v; }
         }
 
         Ok(app_config)
@@ -103,6 +130,11 @@ impl Default for AppConfig {
                 secret_key: "wiccapedia_admin_password".to_string(),
                 bucket_name: "gem-images".to_string(),
                 region: "us-east-1".to_string(),
+            },
+            redis: RedisConfig {
+                url: "redis://:wiccapedia_redis_password@127.0.0.1:6379/0".to_string(),
+                namespace: "wiccapedia".to_string(),
+                default_ttl_seconds: 120,
             },
         }
     }

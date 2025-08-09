@@ -36,3 +36,4 @@ config = "0.14"
 mime = "0.3"
 bytes = "1.0"
 futures-util = "0.3"
+redis = { version = "0.24", features = ["tokio-comp"] }
