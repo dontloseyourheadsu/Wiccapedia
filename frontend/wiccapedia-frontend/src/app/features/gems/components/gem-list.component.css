@@ -254,6 +254,80 @@
   transform: scale(1.1);
 }
 
+/* Modal edit icon */
+.edit-icon-btn {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-color);
+  color: var(--primary-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 10px; /* rounded-corner square */
+  cursor: pointer;
+  font-size: 1.1rem;
+  z-index: 1001;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-icon-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Edit form styles inside modal */
+.edit-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.edit-form .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-form input,
+.edit-form textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background-card);
+  color: var(--text-light);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 10px 16px 16px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn.btn-secondary {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-light);
+}
+
+.btn.btn-primary {
+  background: var(--accent-color);
+  color: var(--primary-color);
+  border-color: var(--accent-color);
+}
+
 .gem-info {
   padding: 20px;
 }
@@ -395,6 +469,7 @@
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
+  overscroll-behavior: contain; /* prevent background scroll */
 }
 
 .modal.show {
@@ -403,19 +478,22 @@
 }
 
 .modal-content {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  /* Use a less transparent, higher-contrast background */
+  background: var(--background-card, #1c1c22);
+  background-image: none;
   margin: auto;
-  padding: 0;
+  padding: 12px 0 0; /* add a bit of top padding to avoid overlap */
   border: none;
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   max-width: 90%;
-  max-height: 90%;
+  max-height: 90vh; /* ensure viewport-relative height */
   width: 600px;
   position: relative;
   transform: scale(0.7);
   transition: transform 0.3s ease;
-  overflow: hidden;
+  overflow: auto; /* allow internal scrolling */
+  overscroll-behavior: contain; /* prevent scroll chaining */
 }
 
 .modal.show .modal-content {
@@ -603,7 +681,84 @@
 }
 
 .modal-body {
-  padding: 30px;
+  padding: 60px 30px 30px; /* extra top padding to clear buttons */
+}
+
+/* Image edit controls */
+.edit-image-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.edit-image-btn:hover {
+  filter: brightness(0.95);
+}
+
+.image-uploader {
+  margin: 12px 0 0;
+}
+
+.image-uploader .dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.image-uploader .dropzone p {
+  margin: 0 0 8px;
+}
+
+.file-select input[type="file"] {
+  display: none;
+}
+
+.file-select {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--accent-color);
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.image-uploader .preview {
+  position: relative;
+  margin-top: 12px;
+  display: inline-block;
+}
+
+.image-uploader .preview img {
+  max-width: 220px;
+  max-height: 160px;
+  border-radius: 8px;
+  display: block;
+}
+
+.image-uploader .remove-preview {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  cursor: pointer;
 }
 
 .gem-modal .modal-body {

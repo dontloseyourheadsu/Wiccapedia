@@ -235,15 +235,45 @@ pub async fn update_gem(
     let gem_id = path.into_inner();
     info!("PUT /api/gems/{} - Updating gem", gem_id);
 
-    let updated_gem = Gem::from(gem_data.into_inner());
+    // Fetch existing to preserve fields like image when not changing it
+    let existing = match gem_service.get_gem_by_id(&gem_id).await {
+        Ok(Some(g)) => g,
+        Ok(None) => {
+            info!("Gem not found for update: {}", gem_id);
+            return Ok(HttpResponse::NotFound().json(serde_json::json!({
+                "error": "Gem not found",
+                "id": gem_id
+            })));
+        }
+        Err(e) => {
+            error!("Failed to fetch gem {} for update: {}", gem_id, e);
+            return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to fetch gem",
+                "message": e.to_string(),
+                "id": gem_id
+            })));
+        }
+    };
 
-    match gem_service.update_gem(&gem_id, updated_gem).await {
+    let body = gem_data.into_inner();
+    let merged = Gem {
+        id: existing.id,
+        // keep existing image unless an upload path is used
+        image: existing.image,
+        name: body.name,
+        magical_description: body.magical_description,
+        category: body.category,
+        color: body.color,
+        chemical_formula: body.chemical_formula,
+    };
+
+    match gem_service.update_gem(&gem_id, merged).await {
         Ok(Some(gem)) => {
             info!("Successfully updated gem: {}", gem.name);
             Ok(HttpResponse::Ok().json(gem))
         }
         Ok(None) => {
-            info!("Gem not found for update: {}", gem_id);
+            info!("Gem not found for update after merge: {}", gem_id);
             Ok(HttpResponse::NotFound().json(serde_json::json!({
                 "error": "Gem not found",
                 "id": gem_id
@@ -557,18 +587,47 @@ pub async fn update_gem_by_name(
     let name = path.into_inner();
     info!("PUT /api/gems/name/{} - Updating gem by name", name);
 
-    let mut gem = Gem::from(gem_data.into_inner());
-    
-    // Ensure the gem name matches the path parameter
-    gem.name = name.clone();
+    // Fetch existing by name to preserve image
+    let existing = match gem_service.get_gems(
+        crate::models::GemFilters { name: Some(name.clone()), ..Default::default() },
+        crate::models::PaginationParams { limit: 1, cursor: None }
+    ).await {
+        Ok(resp) => resp.data.into_iter().next(),
+        Err(e) => {
+            error!("Failed to fetch gem by name {} for update: {}", name, e);
+            return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": "Failed to fetch gem",
+                "message": e.to_string()
+            })));
+        }
+    };
 
-    match gem_service.update_gem_by_name(&name, gem).await {
+    let Some(existing) = existing else {
+        warn!("Gem not found for update by name: {}", name);
+        return Ok(HttpResponse::NotFound().json(serde_json::json!({
+            "error": "Gem not found",
+            "name": name
+        })));
+    };
+
+    let body = gem_data.into_inner();
+    let merged = Gem {
+        id: existing.id,
+        name: name.clone(),
+        image: existing.image, // preserve
+        magical_description: body.magical_description,
+        category: body.category,
+        color: body.color,
+        chemical_formula: body.chemical_formula,
+    };
+
+    match gem_service.update_gem_by_name(&name, merged).await {
         Ok(Some(updated_gem)) => {
             info!("✅ Gem updated successfully by name: {}", name);
             Ok(HttpResponse::Ok().json(updated_gem))
         }
         Ok(None) => {
-            warn!("Gem not found for update by name: {}", name);
+            warn!("Gem not found for update by name after merge: {}", name);
             Ok(HttpResponse::NotFound().json(serde_json::json!({
                 "error": "Gem not found",
                 "name": name
