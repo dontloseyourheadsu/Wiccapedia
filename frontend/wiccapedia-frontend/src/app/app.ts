@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { GemListComponent } from './features/gems/components/gem-list.component';
+import { GemListComponent } from './features/gems/list/gem-list.component';
 
 @Component({
   selector: 'app-root',
