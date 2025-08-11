@@ -126,7 +126,7 @@ mod tests {
         let cursor = Cursor::new(10, CursorDirection::Forward);
         let encoded = cursor.encode().unwrap();
         let decoded = Cursor::decode(&encoded).unwrap();
-        
+
         assert_eq!(cursor.offset, decoded.offset);
         match (cursor.direction, decoded.direction) {
             (CursorDirection::Forward, CursorDirection::Forward) => (),

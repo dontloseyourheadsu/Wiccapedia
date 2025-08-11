@@ -123,10 +123,7 @@
     @if (!loading() && !error() && gems().length > 0) {
     <div class="gems-grid">
       @for (gem of gems(); track trackByGemId($index, gem)) {
-        <app-gem-card 
-          [gem]="gem" 
-          (gemClick)="onGemClick($event)">
-        </app-gem-card>
+      <app-gem-card [gem]="gem" (gemClick)="onGemClick($event)"> </app-gem-card>
       }
     </div>
 
@@ -155,16 +152,17 @@
 
 <!-- Gem Detail Modal -->
 @if (showGemModal() && selectedGem()) {
-  <app-gem-details
-    [gem]="selectedGem()!"
-    [colors]="colors()"
-    [categories]="categories()"
-    [formulas]="formulas()"
-    [loading]="loading()"
-    (close)="onCloseGemModal()"
-    (gemUpdated)="onGemUpdated($event)"
-    (error)="onDetailsError($event)">
-  </app-gem-details>
+<app-gem-details
+  [gem]="selectedGem()!"
+  [colors]="colors()"
+  [categories]="categories()"
+  [formulas]="formulas()"
+  [loading]="loading()"
+  (close)="onCloseGemModal()"
+  (gemUpdated)="onGemUpdated($event)"
+  (error)="onDetailsError($event)"
+>
+</app-gem-details>
 }
 
 <!-- Add Gem Modal -->
