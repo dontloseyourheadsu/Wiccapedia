@@ -30,28 +30,9 @@
     <app-gem-list></app-gem-list>
     }
 
-    <!-- Altar Page (Empty for now) -->
+    <!-- Altar Page -->
     @if (currentPage() === 'altar') {
-    <div class="altar-page">
-      <div class="container">
-        <div class="coming-soon">
-          <i class="fas fa-star altar-icon"></i>
-          <h2>Pentagram Altar</h2>
-          <p>This mystical space is under construction...</p>
-          <p>
-            Soon you'll be able to explore the ancient rituals and ceremonies of
-            the pentagonal altar.
-          </p>
-          <div class="mystical-elements">
-            <span class="element">🕯️</span>
-            <span class="element">🔮</span>
-            <span class="element">⭐</span>
-            <span class="element">🌙</span>
-            <span class="element">🔯</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <app-altar></app-altar>
     }
   </main>
 

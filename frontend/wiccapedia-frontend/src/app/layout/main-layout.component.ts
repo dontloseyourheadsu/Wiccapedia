@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GemListComponent } from '../features/gems/list/gem-list.component';
+import { AltarComponent } from '../features/altar/altar.component';
 import { ConstellationComponent } from '../features/navigation/constellation/constellation.component';
 
 interface PageConfig {
@@ -13,7 +14,7 @@ interface PageConfig {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, GemListComponent, ConstellationComponent],
+  imports: [CommonModule, GemListComponent, AltarComponent, ConstellationComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })

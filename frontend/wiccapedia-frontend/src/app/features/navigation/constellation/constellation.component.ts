@@ -268,6 +268,24 @@ export class ConstellationComponent implements OnInit, OnDestroy {
         p.noFill();
         p.ellipse(star.x, star.y, size * 2);
       }
+      
+      // Draw star name label below the star (avoiding pulsing area)
+      p.fill(255, 215, 0, 180);
+      p.textAlign(p.CENTER);
+      p.textSize(16);
+      p.textStyle(p.BOLD);
+      // Position label below the star with extra spacing to avoid pulsing glow
+      let labelY = star.y + star.size * 3 + 25;
+      
+      // Add subtle glow to text
+      p.fill(255, 215, 0, 60);
+      p.text(star.name.toUpperCase(), star.x, labelY + 1);
+      p.text(star.name.toUpperCase(), star.x - 1, labelY);
+      p.text(star.name.toUpperCase(), star.x + 1, labelY);
+      
+      // Draw main text
+      p.fill(255, 215, 0, 200);
+      p.text(star.name.toUpperCase(), star.x, labelY);
     });
   }
 
