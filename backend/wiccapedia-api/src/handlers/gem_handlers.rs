@@ -175,7 +175,7 @@ pub async fn create_gem_with_image(
         match field_name.as_str() {
             "image" => {
                 // Handle image upload
-                let content_disposition = field.content_disposition();
+                let _content_disposition = field.content_disposition();
                 let content_type = field.content_type()
                     .map(|ct| ct.to_string())
                     .unwrap_or_else(|| "image/jpeg".to_string());

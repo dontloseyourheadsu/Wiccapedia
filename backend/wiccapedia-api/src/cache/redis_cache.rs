@@ -2,7 +2,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use redis::{AsyncCommands, Client};
 use serde::{Serialize, de::DeserializeOwned};
-use tracing::{info, warn};
+use tracing::info;
 
 use crate::config::RedisConfig;
 
@@ -52,7 +52,7 @@ impl RedisCache {
         let namespaced = self.make_key(&[key]);
         let mut conn = self.client.get_async_connection().await?;
         let bytes = serde_json::to_vec(value)?;
-        let ttl = ttl.unwrap_or(self.default_ttl) as usize;
+        let ttl = ttl.unwrap_or(self.default_ttl) as u64;
         let _: () = conn.set_ex(namespaced, bytes, ttl).await?;
         Ok(())
     }

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Cursor-based pagination parameters
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct PaginationParams {
     #[serde(default = "default_limit")]
     pub limit: usize,
@@ -22,13 +22,13 @@ impl Default for PaginationParams {
 }
 
 /// Paginated response with cursor information
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PaginatedResponse<T> {
     pub data: Vec<T>,
     pub pagination: PaginationInfo,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PaginationInfo {
     pub has_next: bool,
     pub has_previous: bool,

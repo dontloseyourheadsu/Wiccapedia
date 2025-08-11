@@ -3,7 +3,7 @@ use aws_config::{BehaviorVersion, Region};
 use aws_credential_types::Credentials;
 use aws_sdk_s3::{Client, config::Builder as S3ConfigBuilder};
 use bytes::Bytes;
-use tracing::{info, error, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 use std::path::Path;
 

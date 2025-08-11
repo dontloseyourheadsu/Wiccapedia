@@ -2,10 +2,10 @@ use async_trait::async_trait;
 use anyhow::Result;
 use sqlx::PgPool;
 use uuid::Uuid;
-use tracing::{info, error, warn};
+use tracing::{info, warn};
 use chrono::{DateTime, Utc};
 
-use crate::models::{Gem, GemFilters, PaginationParams, PaginatedResponse, CreateGemRequest};
+use crate::models::{Gem, GemFilters, PaginationParams, PaginatedResponse};
 use crate::traits::GemService;
 
 /// PostgreSQL implementation of GemService
