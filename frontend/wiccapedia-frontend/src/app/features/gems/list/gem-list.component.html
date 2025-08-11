@@ -123,25 +123,10 @@
     @if (!loading() && !error() && gems().length > 0) {
     <div class="gems-grid">
       @for (gem of gems(); track trackByGemId($index, gem)) {
-      <div class="gem-card" (click)="onGemClick(gem)">
-        <div class="gem-image-container">
-          <img
-            [src]="gem.image"
-            [alt]="gem.name"
-            [title]="gem.name"
-            (error)="getImageError($event)"
-            class="gem-image"
-          />
-        </div>
-        <div class="gem-info">
-          <h3 class="gem-name">{{ gem.name }}</h3>
-          <p class="gem-description">{{ gem.magical_description }}</p>
-          <div class="gem-properties">
-            <span class="gem-property">{{ gem.color }}</span>
-            <span class="gem-property">{{ gem.category }}</span>
-          </div>
-        </div>
-      </div>
+        <app-gem-card 
+          [gem]="gem" 
+          (gemClick)="onGemClick($event)">
+        </app-gem-card>
       }
     </div>
 
@@ -170,107 +155,16 @@
 
 <!-- Gem Detail Modal -->
 @if (showGemModal() && selectedGem()) {
-<div class="modal show" (click)="onCloseGemModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <span class="close" (click)="onCloseGemModal()">&times;</span>
-    @if (!editMode()) {
-      <button class="edit-icon-btn" title="Editar" (click)="onEnterEditMode()">
-        <i class="fas fa-pen"></i>
-      </button>
-    }
-<div class="modal-body">
-      <div class="gem-image-container">
-        <img
-          [src]="selectedGem()!.image"
-          [alt]="selectedGem()!.name"
-          [title]="selectedGem()!.name"
-        />
-        <button class="edit-image-btn" title="Cambiar imagen" (click)="onToggleImageUploader()">
-          <i class="fas fa-pen"></i>
-        </button>
-      </div>
-      @if (showImageUploader()) {
-        <div class="image-uploader">
-          <div
-            class="dropzone"
-            (drop)="onEditDrop($event)"
-            (dragover)="onEditDragOver($event)"
-          >
-            <p>Arrastra y suelta una imagen aquí o</p>
-            <label class="file-select">
-              <input type="file" accept="image/*" (change)="onEditFileSelected($event)" />
-              Buscar imagen
-            </label>
-            @if (editFilePreview()) {
-              <div class="preview">
-                <img [src]="editFilePreview()!" alt="Preview" />
-                <button type="button" class="remove-preview" (click)="onRemoveEditFile()" title="Quitar imagen">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            }
-          </div>
-        </div>
-      }
-      <div class="gem-details">
-        @if (!editMode()) {
-          <h2>{{ selectedGem()!.name }}</h2>
-          <p class="gem-description">{{ selectedGem()!.magical_description }}</p>
-          <div class="gem-properties">
-            <div class="property">
-              <i class="fas fa-layer-group"></i>
-              <strong>Categoría:</strong>
-              <span>{{ selectedGem()!.category }}</span>
-            </div>
-            <div class="property">
-              <i class="fas fa-palette"></i>
-              <strong>Color:</strong>
-              <span>{{ selectedGem()!.color }}</span>
-            </div>
-            <div class="property">
-              <i class="fas fa-atom"></i>
-              <strong>Fórmula química:</strong>
-              <span>{{ selectedGem()!.chemical_formula }}</span>
-            </div>
-          </div>
-        } @else {
-          <form [formGroup]="editGemForm" class="edit-form">
-            <div class="form-row">
-              <label>Nombre</label>
-              <input formControlName="name" type="text" />
-            </div>
-            <div class="form-row">
-              <label>Descripción mágica</label>
-              <textarea formControlName="magical_description" rows="4"></textarea>
-            </div>
-            <div class="form-row">
-              <label>Categoría</label>
-              <input formControlName="category" type="text" />
-            </div>
-            <div class="form-row">
-              <label>Color</label>
-              <input formControlName="color" type="text" />
-            </div>
-            <div class="form-row">
-              <label>Fórmula química</label>
-              <input formControlName="chemical_formula" type="text" />
-            </div>
-          </form>
-        }
-      </div>
-    </div>
-    @if (editMode()) {
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" (click)="onCancelEdit()">
-          Cancelar
-        </button>
-        <button type="button" class="btn btn-primary" (click)="onSaveEdit()">
-          Guardar
-        </button>
-      </div>
-    }
-  </div>
-</div>
+  <app-gem-details
+    [gem]="selectedGem()!"
+    [colors]="colors()"
+    [categories]="categories()"
+    [formulas]="formulas()"
+    [loading]="loading()"
+    (close)="onCloseGemModal()"
+    (gemUpdated)="onGemUpdated($event)"
+    (error)="onDetailsError($event)">
+  </app-gem-details>
 }
 
 <!-- Add Gem Modal -->
