@@ -1,0 +1,66 @@
+<!-- Main Application Layout -->
+<div class="main-layout">
+  <!-- Common Header -->
+  <header class="app-header">
+    <div class="container">
+      <!-- Navigation Button -->
+      <button
+        class="constellation-nav-btn"
+        (click)="openConstellation()"
+        title="Open Navigation"
+      >
+        <i class="fas fa-compass"></i>
+      </button>
+
+      <!-- Title Section -->
+      <div class="title-section">
+        <h1 class="app-title">
+          <i [class]="getCurrentPageConfig().icon"></i>
+          {{ getCurrentPageConfig().title }}
+        </h1>
+        <p class="app-subtitle">{{ getCurrentPageConfig().subtitle }}</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- Gems Page -->
+    @if (currentPage() === 'gems') {
+    <app-gem-list></app-gem-list>
+    }
+
+    <!-- Altar Page (Empty for now) -->
+    @if (currentPage() === 'altar') {
+    <div class="altar-page">
+      <div class="container">
+        <div class="coming-soon">
+          <i class="fas fa-star altar-icon"></i>
+          <h2>Pentagram Altar</h2>
+          <p>This mystical space is under construction...</p>
+          <p>
+            Soon you'll be able to explore the ancient rituals and ceremonies of
+            the pentagonal altar.
+          </p>
+          <div class="mystical-elements">
+            <span class="element">🕯️</span>
+            <span class="element">🔮</span>
+            <span class="element">⭐</span>
+            <span class="element">🌙</span>
+            <span class="element">🔯</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </main>
+
+  <!-- Constellation Navigation Overlay -->
+  @if (showConstellation()) {
+  <app-constellation
+    (navigateTo)="navigateToPage($event)"
+    (close)="closeConstellation()"
+  >
+  </app-constellation>
+  }
+</div>
