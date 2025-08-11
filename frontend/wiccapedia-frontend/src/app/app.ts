@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { GemListComponent } from './features/gems/components/gem-list.component';
+import { MainLayoutComponent } from './layout/main-layout.component';
 
 @Component({
   selector: 'app-root',
-  imports: [GemListComponent],
+  imports: [MainLayoutComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

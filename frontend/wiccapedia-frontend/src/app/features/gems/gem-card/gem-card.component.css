@@ -1,0 +1,124 @@
+/* Gem Card Component Styles */
+.gem-card {
+  background: var(--gradient-card);
+  border-radius: 15px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.8s ease forwards;
+  animation-delay: calc(var(--index) * 0.1s);
+}
+
+.gem-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transform: rotate(45deg);
+  transition: transform 0.5s ease;
+}
+
+.gem-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-glow);
+  border-color: var(--border-color);
+}
+
+.gem-card:hover::before {
+  transform: rotate(45deg) translateX(100%);
+}
+
+.gem-image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.gem-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gem-card:hover .gem-image {
+  transform: scale(1.1);
+}
+
+.gem-info {
+  position: relative;
+  z-index: 1;
+}
+
+.gem-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--accent-color);
+  text-align: center;
+}
+
+.gem-description {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  opacity: 0.9;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gem-properties {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.gem-property {
+  background: rgba(255, 215, 0, 0.1);
+  color: var(--accent-color);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gem-image-container {
+    height: 150px;
+  }
+  
+  .gem-name {
+    font-size: 1.1rem;
+  }
+  
+  .gem-description {
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,19 @@
+<div class="gem-card" (click)="onGemClick()">
+  <div class="gem-image-container">
+    <img
+      [src]="gem.image"
+      [alt]="gem.name"
+      [title]="gem.name"
+      (error)="onImageError($event)"
+      class="gem-image"
+    />
+  </div>
+  <div class="gem-info">
+    <h3 class="gem-name">{{ gem.name }}</h3>
+    <p class="gem-description">{{ gem.magical_description }}</p>
+    <div class="gem-properties">
+      <span class="gem-property">{{ gem.color }}</span>
+      <span class="gem-property">{{ gem.category }}</span>
+    </div>
+  </div>
+</div>

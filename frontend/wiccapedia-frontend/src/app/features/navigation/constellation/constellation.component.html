@@ -1,0 +1,32 @@
+<div class="constellation-container">
+  <!-- P5.js Canvas Container -->
+  <div #p5Container class="p5-canvas"></div>
+
+  <!-- Hover Information Popup -->
+  @if (getHoveredPageInfo()) {
+  <div
+    class="portal-info"
+    [style.left.px]="(hoveredStar?.x || 0) + 30"
+    [style.top.px]="(hoveredStar?.y || 0) - 80"
+  >
+    <div class="portal-card">
+      <div class="portal-header">
+        <i [class]="getHoveredPageInfo()!.icon" class="portal-icon"></i>
+        <h3>{{ getHoveredPageInfo()!.title }}</h3>
+      </div>
+      <p class="portal-subtitle">{{ getHoveredPageInfo()!.subtitle }}</p>
+      <p class="portal-description">{{ getHoveredPageInfo()!.description }}</p>
+      <div class="portal-hint">Click to enter ✨</div>
+    </div>
+  </div>
+  }
+
+  <!-- Close Button -->
+  <button
+    class="close-constellation"
+    (click)="close.emit()"
+    title="Close Navigation"
+  >
+    <i class="fas fa-times"></i>
+  </button>
+</div>
