@@ -1,0 +1,549 @@
+/* Altar Main Page Component */
+
+:host {
+  display: block;
+  background: var(--background-gradient);
+  min-height: calc(100vh - 140px);
+}
+
+.altar-main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+/* Header */
+.altar-header {
+  text-align: center;
+  padding: 40px 0 60px;
+}
+
+.altar-header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 3rem;
+  color: var(--text-light);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.altar-header h1 i {
+  color: var(--accent-color);
+  font-size: 2.5rem;
+}
+
+.altar-subtitle {
+  font-size: 1.4rem;
+  color: var(--accent-color);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Section Styling */
+section {
+  margin-bottom: 80px;
+}
+
+section h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 2.2rem;
+  color: var(--text-light);
+  margin-bottom: 30px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+section h2 i {
+  color: var(--accent-color);
+  font-size: 1.8rem;
+}
+
+.section-description {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+  line-height: 1.6;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Altar Visualization Section */
+.altar-visualization-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 50px;
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+/* Guide Grid */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.guide-card {
+  background: var(--background-card);
+  border-radius: 15px;
+  padding: 30px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.guide-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.guide-card:hover::before {
+  left: 100%;
+}
+
+.guide-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-color);
+  box-shadow: var(--shadow-glow);
+}
+
+.guide-card h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guide-card p {
+  color: var(--text-light);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Pentacle Section */
+.pentacle-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 50px;
+  border: 1px solid var(--border-color);
+}
+
+.pentacle-info {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.pentacle-description p {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.elements-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.elements-list li {
+  color: var(--text-light);
+  margin: 10px 0;
+  font-size: 1.1rem;
+}
+
+.element-point {
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+.pentacle-properties {
+  margin: 30px 0;
+}
+
+.pentacle-properties h4 {
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  font-family: 'Cinzel', serif;
+}
+
+.properties-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.property-tag {
+  background: var(--gradient-accent);
+  color: var(--primary-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.property-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+.pentacle-usage {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.pentacle-usage p {
+  color: var(--text-light);
+  margin: 10px 0;
+  line-height: 1.6;
+}
+
+/* Candles and Incense Sections */
+.candles-section,
+.incense-section {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  padding: 40px;
+  border: 1px solid var(--border-color);
+}
+
+.candles-info,
+.incense-info {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.candles-info p,
+.incense-info p {
+  color: var(--text-light);
+  font-size: 1.1rem;
+  margin: 15px 0;
+  line-height: 1.6;
+}
+
+.incense-varieties h4 {
+  color: var(--accent-color);
+  margin: 30px 0 20px 0;
+  font-family: 'Cinzel', serif;
+  text-align: center;
+}
+
+.varieties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.variety-item {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid var(--border-color);
+}
+
+.variety-name {
+  color: var(--accent-color);
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.variety-meaning {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* Tools Section */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 25px;
+}
+
+.tool-card {
+  background: var(--background-card);
+  border-radius: 12px;
+  padding: 25px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.tool-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-color);
+  box-shadow: var(--shadow-glow);
+}
+
+.tool-card h4 {
+  font-family: 'Cinzel', serif;
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.tool-meaning,
+.tool-use {
+  color: var(--text-light);
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.tool-meaning strong,
+.tool-use strong {
+  color: var(--accent-color);
+}
+
+/* Ritual Flow Section */
+.ritual-flow-section {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 50px;
+  border: 1px solid var(--border-color);
+}
+
+.ritual-steps {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ritual-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border-left: 4px solid var(--accent-color);
+  transition: all 0.3s ease;
+}
+
+.ritual-step:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(10px);
+}
+
+.step-number {
+  background: var(--gradient-accent);
+  color: var(--primary-color);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  color: var(--text-light);
+  margin: 0 0 8px 0;
+  font-family: 'Cinzel', serif;
+}
+
+.step-content p {
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: var(--background-card);
+  border-radius: 20px;
+  max-width: 90%;
+  max-height: 90vh;
+  width: 600px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  position: relative;
+  transform: scale(0.7);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.modal.show .modal-content {
+  transform: scale(1);
+}
+
+.modal-header {
+  padding: 30px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.8rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.modal-body {
+  padding: 30px;
+  overflow-y: auto;
+  max-height: calc(90vh - 120px);
+}
+
+.item-details h3 {
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  font-family: 'Cinzel', serif;
+}
+
+.item-details p {
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.element-tag {
+  display: inline-block;
+  background: var(--gradient-accent);
+  color: var(--primary-color);
+  padding: 6px 15px;
+  border-radius: 15px;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .guide-grid,
+  .tools-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .altar-main-container {
+    padding: 0 15px 40px;
+  }
+
+  .altar-header h1 {
+    font-size: 2.5rem;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  section {
+    margin-bottom: 60px;
+  }
+
+  section h2 {
+    font-size: 2rem;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .altar-visualization-section,
+  .pentacle-section,
+  .ritual-flow-section {
+    padding: 30px 20px;
+  }
+
+  .guide-grid,
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .varieties-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .modal-header,
+  .modal-body {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .altar-header h1 {
+    font-size: 2rem;
+  }
+
+  .ritual-step {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .step-number {
+    align-self: center;
+  }
+}
