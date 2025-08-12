@@ -367,83 +367,87 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
     const floatOffset = Math.sin(p.frameCount * 0.05) * 2;
     p.translate(0, floatOffset);
     
-    // Bowl shadow
-    p.fill(0, 0, 0, 50);
+    // Draw gradient bowl based on your HTML example
+    const radius = width / 2;
+    
+    // Create gradient for the bowl (black to dark gray)
+    for (let r = radius; r > 0; r--) {
+      const inter = p.map(r, 0, radius, 0, 1);
+      const c = p.lerpColor(p.color(20), p.color(80), inter); // Black to dark gray
+      p.stroke(c);
+      p.strokeWeight(2);
+      // Draw semicircle (bowl shape)
+      p.arc(x, y, r * 2, r * 2, 0, Math.PI);
+    }
+    
+    // Remove stroke for semicircles
     p.noStroke();
-    p.ellipse(x + 3, y + 3, width, height);
     
-    // Main bowl body with gradient effect
-    p.fill(color);
-    p.stroke(0, 0, 0, 120);
-    p.strokeWeight(3);
-    p.ellipse(x, y, width, height);
-    
-    // Bowl rim with highlight
-    p.stroke(255, 255, 255, 100);
-    p.strokeWeight(2);
-    p.noFill();
-    p.ellipse(x, y - height * 0.15, width * 0.9, height * 0.2);
-    
-    // Handle on left side
-    p.stroke(color);
-    p.strokeWeight(4);
-    p.noFill();
-    p.arc(x - width/2 - 8, y - height * 0.1, 16, 20, 0, Math.PI);
-    
-    // Handle on right side  
-    p.arc(x + width/2 + 8, y - height * 0.1, 16, 20, 0, Math.PI);
-    
-    // Contents with element-appropriate colors and effects
+    // Set circle color based on element type
     if (color === '#4682B4') {
-      // Water bowl - flowing water effect
-      p.fill(65, 105, 225, 180);
-      p.noStroke();
-      p.ellipse(x, y, width * 0.75, height * 0.5);
-      
-      // Water ripples
-      p.stroke(255, 255, 255, 100);
-      p.strokeWeight(1);
-      p.noFill();
-      for (let i = 0; i < 3; i++) {
-        const rippleSize = 15 + i * 8;
-        const rippleAlpha = 150 - i * 50;
-        p.stroke(255, 255, 255, rippleAlpha);
-        p.ellipse(x, y, rippleSize, rippleSize * 0.3);
-      }
-      
-      // Magical sparkles on water surface
-      p.fill(255, 255, 255, 200);
-      p.noStroke();
-      for (let i = 0; i < 5; i++) {
-        const sparkleX = x + p.random(-width * 0.3, width * 0.3);
-        const sparkleY = y + p.random(-height * 0.2, height * 0.1);
-        const twinkle = Math.sin(p.frameCount * 0.1 + i) * 0.5 + 0.5;
-        p.circle(sparkleX, sparkleY, 2 + twinkle * 2);
-      }
+      // Water bowl - blue circles
+      p.fill(30, 144, 255);
     } else {
-      // Earth bowl - rich earth and crystals
+      // Earth bowl - brown circles  
       p.fill(139, 69, 19);
-      p.noStroke();
-      p.ellipse(x, y, width * 0.75, height * 0.5);
-      
-      // Salt/earth texture
-      p.fill(160, 82, 45);
-      p.noStroke();
-      for (let i = 0; i < 8; i++) {
-        const grainX = x + p.random(-width * 0.3, width * 0.3);
-        const grainY = y + p.random(-height * 0.2, height * 0.1);
-        p.circle(grainX, grainY, p.random(2, 4));
-      }
-      
-      // Small crystals in earth
-      p.fill(255, 215, 0, 150);
-      p.stroke(255, 215, 0);
-      p.strokeWeight(1);
-      for (let i = 0; i < 3; i++) {
-        const crystalX = x + p.random(-width * 0.25, width * 0.25);
-        const crystalY = y + p.random(-height * 0.15, height * 0.1);
-        p.triangle(crystalX, crystalY - 3, crystalX - 2, crystalY + 2, crystalX + 2, crystalY + 2);
-      }
+    }
+    
+    // Define sizes: small, big, medium (in that order)
+    const smallSize = radius * 0.15;
+    const bigSize = radius * 0.35;
+    const mediumSize = radius * 0.25;
+    
+    // Calculate positions to cover 90% of bowl width without gaps
+    const bowlWidth = radius * 2 * 0.9; // 90% of bowl width
+    const startX = x - bowlWidth / 2;
+    
+    // Define width proportions: small=1, big=3, medium=2 (total=6 parts)
+    const totalParts = 1 + 3 + 2; // 6 parts total
+    const partWidth = bowlWidth / totalParts;
+    
+    // Calculate widths for each semicircle
+    const smallWidth = partWidth * 1;
+    const bigWidth = partWidth * 3;
+    const mediumWidth = partWidth * 2;
+    
+    // Heights remain proportional to make them visually different sizes
+    const smallHeight = radius * 0.15;
+    const bigHeight = radius * 0.35;
+    const mediumHeight = radius * 0.25;
+    
+    // Position semicircles at the bowl's top edge (y level)
+    const ballHeight = y;
+    
+    // Draw three semicircles stretched horizontally without gaps
+    // Small semicircle (left) - stretched to smallWidth
+    p.push();
+    p.translate(startX + smallWidth/2, ballHeight);
+    p.scale(smallWidth/smallHeight, 1); // Stretch horizontally
+    p.arc(0, 0, smallHeight, smallHeight, Math.PI, p.TWO_PI);
+    p.pop();
+    
+    // Big semicircle (center) - stretched to bigWidth
+    p.push();
+    p.translate(startX + smallWidth + bigWidth/2, ballHeight);
+    p.scale(bigWidth/bigHeight, 1); // Stretch horizontally
+    p.arc(0, 0, bigHeight, bigHeight, Math.PI, p.TWO_PI);
+    p.pop();
+    
+    // Medium semicircle (right) - stretched to mediumWidth
+    p.push();
+    p.translate(startX + smallWidth + bigWidth + mediumWidth/2, ballHeight);
+    p.scale(mediumWidth/mediumHeight, 1); // Stretch horizontally
+    p.arc(0, 0, mediumHeight, mediumHeight, Math.PI, p.TWO_PI);
+    p.pop();
+    
+    // Add magical sparkles for extra mystical effect
+    p.fill(255, 255, 255, 150);
+    p.noStroke();
+    for (let i = 0; i < 3; i++) {
+      const sparkleX = x + p.random(-radius * 0.7, radius * 0.7);
+      const sparkleY = y + p.random(-radius * 0.3, radius * 0.1);
+      const twinkle = Math.sin(p.frameCount * 0.1 + i) * 0.5 + 0.5;
+      p.circle(sparkleX, sparkleY, 1 + twinkle * 2);
     }
     
     p.pop();
