@@ -1,0 +1,241 @@
+<div class="altar-main-container">
+  <!-- Header -->
+  <div class="altar-header">
+    <h1><i class="fas fa-star"></i> Wiccan Altar Ritual Setup</h1>
+    <p class="altar-subtitle">Sacred Tools, Meanings, and Ritual Practice</p>
+  </div>
+
+  <!-- Interactive Altar Visualization -->
+  <section class="altar-visualization-section">
+    <h2><i class="fas fa-magic"></i> Interactive Altar Layout</h2>
+    <p class="section-description">
+      Explore the sacred arrangement of tools and elements on a traditional
+      Wiccan altar. Each item has specific meanings and purposes in ritual
+      practice.
+    </p>
+
+    <app-altar-visualization
+      (itemClick)="onItemClick($event)"
+      (itemHover)="onItemHover($event)"
+    >
+    </app-altar-visualization>
+  </section>
+
+  <!-- Altar Setup Guide -->
+  <section class="altar-guide-section">
+    <h2><i class="fas fa-scroll"></i> The Sacred Altar</h2>
+
+    <div class="guide-grid">
+      <div class="guide-card">
+        <h3><i class="fas fa-home"></i> Purpose</h3>
+        <p>Your sacred workspace for spells and rituals.</p>
+      </div>
+
+      <div class="guide-card">
+        <h3><i class="fas fa-table"></i> Form</h3>
+        <p>
+          Can be a large table, coffee table, shelf, or even a portable altar
+          set up on a cloth on the floor.
+        </p>
+      </div>
+
+      <div class="guide-card">
+        <h3><i class="fas fa-palette"></i> Covering</h3>
+        <p>
+          If using a cloth, lavender or deep purple is best — these colors
+          attract spiritual fulfillment, balance chakras, and encourage healing
+          energy.
+        </p>
+      </div>
+
+      <div class="guide-card">
+        <h3><i class="fas fa-gem"></i> Personalization</h3>
+        <p>Decorate with amulets, charms, or any personal spiritual objects.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pentacle Information -->
+  <section class="pentacle-section">
+    <h2><i class="fas fa-star"></i> The Sacred Pentacle</h2>
+
+    <div class="pentacle-info">
+      <div class="pentacle-description">
+        <p>Five-pointed star symbol, representing the five elements:</p>
+        <ul class="elements-list">
+          <li><span class="element-point">Top point:</span> Spirit</li>
+          <li>
+            <span class="element-point">Clockwise:</span> Water → Fire → Earth →
+            Air
+          </li>
+        </ul>
+
+        <div class="pentacle-properties">
+          <h4>Sacred Properties:</h4>
+          <div class="properties-tags">
+            <span class="property-tag">Protection</span>
+            <span class="property-tag">Spiritual Harmony</span>
+            <span class="property-tag">Safe Return</span>
+            <span class="property-tag">Balance</span>
+          </div>
+        </div>
+
+        <div class="pentacle-usage">
+          <p>
+            <strong>Placement:</strong> Center of the altar, with other items
+            arranged around it.
+          </p>
+          <p>
+            <strong>Charging:</strong> Leave under the full moon outdoors or on
+            a windowsill to cleanse and fill with magical energy.
+          </p>
+          <p>
+            <strong>Tip:</strong> Always use the upright position (point up) for
+            positive magic.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Candles Section -->
+  <section class="candles-section">
+    <h2><i class="fas fa-burn"></i> Sacred Candles</h2>
+
+    <div class="candles-info">
+      <p><strong>Element:</strong> Fire and Air</p>
+      <p>
+        <strong>Basic rule:</strong> Always start with a central white candle
+        for neutralizing energy.
+      </p>
+      <p><strong>Placement:</strong> Back center of the altar.</p>
+      <p>
+        <strong>Blessing ritual:</strong> Touch with water while saying "This
+        candle is now cleansed and blessed."
+      </p>
+      <p>
+        <strong>Colors:</strong> Choose according to your intention (love,
+        prosperity, protection, etc.).
+      </p>
+    </div>
+  </section>
+
+  <!-- Incense Section -->
+  <section class="incense-section">
+    <h2><i class="fas fa-cloud"></i> Sacred Incense</h2>
+
+    <div class="incense-info">
+      <p>
+        <strong>Purpose:</strong> Sets the magical atmosphere, raises energy.
+      </p>
+      <p><strong>Placement:</strong> Front center of the altar.</p>
+
+      <div class="incense-varieties">
+        <h4>Varieties and Meanings:</h4>
+        <div class="varieties-grid">
+          <div class="variety-item">
+            <span class="variety-name">Basil</span>
+            <span class="variety-meaning">Wealth, prosperity, fertility</span>
+          </div>
+          <div class="variety-item">
+            <span class="variety-name">Eucalyptus</span>
+            <span class="variety-meaning"
+              >Emotional balance, decision-making</span
+            >
+          </div>
+          <div class="variety-item">
+            <span class="variety-name">Frankincense</span>
+            <span class="variety-meaning"
+              >Spiritual cleansing, health spells</span
+            >
+          </div>
+          <div class="variety-item">
+            <span class="variety-name">Sage</span>
+            <span class="variety-meaning"
+              >Removes negative energy, purifies</span
+            >
+          </div>
+          <div class="variety-item">
+            <span class="variety-name">Sandalwood</span>
+            <span class="variety-meaning">Relaxation, stress relief</span>
+          </div>
+          <div class="variety-item">
+            <span class="variety-name">Ylang-Ylang</span>
+            <span class="variety-meaning"
+              >Love, marriage harmony, sexual healing</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tools Section -->
+  <section class="tools-section">
+    <h2><i class="fas fa-tools"></i> Optional but Powerful Tools</h2>
+
+    <div class="tools-grid">
+      @for (tool of wiccanTools(); track tool.name) {
+      <div class="tool-card">
+        <h4>{{ tool.name }}</h4>
+        <p class="tool-meaning"><strong>Meaning:</strong> {{ tool.meaning }}</p>
+        <p class="tool-use"><strong>Use:</strong> {{ tool.use }}</p>
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- Ritual Flow Section -->
+  <section class="ritual-flow-section">
+    <h2><i class="fas fa-list-ol"></i> Basic Ritual Flow at the Altar</h2>
+
+    <div class="ritual-steps">
+      @for (step of ritualFlow(); track step.step) {
+      <div class="ritual-step">
+        <div class="step-number">{{ step.step }}</div>
+        <div class="step-content">
+          <h4>{{ step.action }}</h4>
+          <p>{{ step.description }}</p>
+        </div>
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- Item Details Modal -->
+  @if (showItemDetails() && selectedItemDetails()) {
+  <div class="modal item-modal show" (click)="onCloseItemDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <i class="fas fa-star"></i>
+          {{ selectedItemDetails()!.name }}
+        </h2>
+        <button class="close-btn" (click)="onCloseItemDetails()">
+          &times;
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="item-details">
+          <div class="item-description">
+            <h3>Description</h3>
+            <p>{{ selectedItemDetails()!.description }}</p>
+          </div>
+          <div class="item-meaning">
+            <h3>Sacred Meaning</h3>
+            <p>{{ selectedItemDetails()!.meaning }}</p>
+          </div>
+          @if (selectedItemDetails()!.element) {
+          <div class="item-element">
+            <h3>Associated Element</h3>
+            <span class="element-tag">{{
+              selectedItemDetails()!.element
+            }}</span>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>
