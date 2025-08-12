@@ -48,18 +48,18 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
 
   private setupAltarItems(): void {
     this.altarItems = [
-      // Central Pentacle
+      // Central Pentacle - moved to middle position
       {
         id: 'pentacle',
         name: 'Pentacle',
         description: 'Protection, 5 Elements',
         meaning: 'Five-pointed star representing Spirit, Water, Fire, Earth, and Air. Provides protection and spiritual harmony.',
-        position: { x: 400, y: 300 },
+        position: { x: 400, y: 330 },
         size: { width: 80, height: 80 },
         color: '#FFD700',
         type: 'pentacle'
       },
-      // White Candle (top center)
+      // White Candle (top center) - moved back up
       {
         id: 'white-candle',
         name: 'White Candle',
@@ -71,43 +71,43 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         type: 'candle',
         element: 'Fire'
       },
-      // Earth Bowl (left)
+      // Earth Bowl (left) - moved to middle position
       {
         id: 'earth-bowl',
         name: 'Earth Bowl',
         description: 'Stability, Balance',
         meaning: 'Represents grounding and stability. Contains salt or earth for purification and banishing negativity.',
-        position: { x: 250, y: 300 },
+        position: { x: 250, y: 330 },
         size: { width: 50, height: 30 },
         color: '#8B4513', // Saddle brown - more earthy
         type: 'bowl',
         element: 'Earth'
       },
-      // Water Bowl/Chalice (right)
+      // Water Bowl/Chalice (right) - moved to middle position
       {
         id: 'water-bowl',
         name: 'Water Bowl / Chalice',
         description: 'Healing, Fertility',
         meaning: 'Represents healing, fertility, and emotional flow. Can be used for blessing rituals.',
-        position: { x: 550, y: 300 },
+        position: { x: 550, y: 330 },
         size: { width: 50, height: 40 },
         color: '#4682B4', // Steel blue - more watery
         type: 'bowl',
         element: 'Water'
       },
-      // Incense (front center)
+      // Incense (front center) - keep lowered position
       {
         id: 'incense',
         name: 'Incense',
         description: 'Purification, Atmosphere',
         meaning: 'Sets magical atmosphere and raises energy. Different scents have different purposes (sage, frankincense, etc.).',
-        position: { x: 400, y: 450 },
+        position: { x: 400, y: 500 },
         size: { width: 40, height: 20 },
         color: '#DDA0DD',
         type: 'incense',
         element: 'Air'
       },
-      // Crystals & Stones (top left)
+      // Crystals & Stones (top left) - moved back up
       {
         id: 'crystals',
         name: 'Crystals & Stones',
@@ -118,35 +118,35 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         color: '#BB9FFF', // Light purple - more mystical
         type: 'crystal'
       },
-      // Feathers (top right)
+      // Feathers (top right) - moved back up
       {
         id: 'feathers',
         name: 'Feathers',
         description: 'Angelic Connection',
         meaning: 'Connect with angelic energies and provide spiritual guidance. White feathers are best for purity.',
         position: { x: 600, y: 180 },
-        size: { width: 50, height: 30 },
+        size: { width: 60, height: 35 },
         color: '#FFFFFF',
         type: 'tool'
       },
-      // Athame/Wand (bottom left)
+      // Athame/Wand (bottom left) - keep lowered position
       {
         id: 'athame',
         name: 'Athame / Wand',
         description: 'Invocation, Circle Casting',
         meaning: 'Direct energy and cast protective circles. Athame for willpower, wand for invocation and blessing.',
-        position: { x: 200, y: 440 }, // Moved down to be more centered on table
+        position: { x: 200, y: 480 },
         size: { width: 70, height: 25 },
         color: '#D3D3D3',
         type: 'tool'
       },
-      // Cauldron/Bell/Broom (bottom right)
+      // Cauldron/Bell/Broom (bottom right) - keep lowered position
       {
         id: 'cauldron',
         name: 'Cauldron / Bell / Broom',
         description: 'Brewing, Banishing, Cleansing',
         meaning: 'Cauldron for transformation and brewing, bell for clearing energy, broom for cleansing negativity.',
-        position: { x: 600, y: 420 },
+        position: { x: 600, y: 480 },
         size: { width: 60, height: 45 },
         color: '#C0C0C0',
         type: 'tool'
@@ -614,92 +614,162 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
   private drawDetailedFeathers(p: p5, x: number, y: number, width: number, height: number): void {
     p.push();
     
-    // Draw multiple feathers with detailed structure based on Processing sketch
+    // Draw multiple feathers using the hand-drawn method from the animation
     const featherCount = 3;
+    const featherColors = [
+      p.color(250, 250, 255),
+      p.color(245, 248, 255), 
+      p.color(255, 245, 250)
+    ];
+    
+    // Increased spacing and varied rotation angles
+    const featherSpacing = 22; // Increased from 16
+    const rotationAngles = [-0.25, 0.05, 0.3]; // More varied angles
+    
     for (let f = 0; f < featherCount; f++) {
-      const offsetX = (f - 1) * 16;
+      const offsetX = (f - 1) * featherSpacing;
       const featherX = x + offsetX;
-      const featherLength = height * 0.8;
-      const featherWidth = width * 0.15;
-      
-      // Feather rotation for natural look
-      const rotation = (f - 1) * 0.1;
+      const rotation = rotationAngles[f];
       
       p.push();
       p.translate(featherX, y);
       p.rotate(rotation);
       
-      // Draw feather shadow
-      p.fill(0, 0, 0, 30);
+      // Feather parameters following the hand-drawn method
+      const len = height * 0.9; // visual length
+      const curve = (f - 1) * 0.2; // slight curvature variation
+      const leftBias = 1.1 + f * 0.05; // asymmetry
+      const featherColor = featherColors[f];
+      
+      // Helper function for vane width (teardrop shape)
+      const vaneWidth = (yPos: number) => {
+        const n = p.map(Math.abs(yPos), 0, len * 0.45, 0, 1);
+        let w: number;
+        if (n > 0.9) w = p.lerp(8, 1.5, p.map(n, 0.9, 1, 0, 1)); // tip
+        else if (n > 0.65) w = p.lerp(14, 8, p.map(n, 0.65, 0.9, 0, 1));
+        else if (n > 0.25) w = 14; // mid wide
+        else w = p.lerp(7, 14, p.map(n, 0, 0.25, 0, 1)); // base narrows
+        
+        const left = w * leftBias;
+        const right = w * 0.7; // leading edge tighter
+        return { left, right };
+      };
+      
+      // 1) Draw rachis (center line) with slight curve
+      const rachisPts: Array<{x: number, y: number}> = [];
+      for (let i = -len * 0.45; i <= len * 0.45; i += 2) {
+        const t = i / (len * 0.45);
+        const curveX = (curve * 15) * (t * t - 1);
+        const curveY = i;
+        rachisPts.push({ x: curveX, y: curveY });
+      }
+      
+      // Draw rachis line
+      p.stroke(20, 25, 30, 200);
+      p.strokeWeight(2.2);
+      p.noFill();
+      p.beginShape();
+      for (const pt of rachisPts) {
+        p.vertex(pt.x, pt.y);
+      }
+      p.endShape();
+      
+      // 2) Fill vane outline (teardrop shape)
       p.noStroke();
-      p.ellipse(2, 2, featherWidth + 2, featherLength + 2);
+      p.fill(p.red(featherColor), p.green(featherColor), p.blue(featherColor), 220);
       
-      // Main feather shaft (rachis)
-      p.stroke(220, 220, 220);
-      p.strokeWeight(2);
-      p.line(0, -featherLength/2, 0, featherLength/2);
+      for (let yPos = -len * 0.42; yPos <= len * 0.42; yPos += 1) {
+        const { left, right } = vaneWidth(yPos);
+        const xl = -left;
+        const xr = right;
+        p.quad(xl, yPos, xl, yPos + 1, xr, yPos + 1, xr, yPos);
+      }
       
-      // Draw barbs (feather fibers) with natural curvature
-      p.strokeWeight(1);
-      const barbCount = 20;
+      // 3) Edge notches/splits (short cuts along silhouette)
+      p.noFill();
+      p.stroke(20, 25, 30, 240);
+      p.strokeWeight(1.4);
       
-      for (let i = 0; i < barbCount; i++) {
-        const t = i / (barbCount - 1);
-        const barbY = p.map(t, 0, 1, -featherLength/2 + 5, featherLength/2 - 5);
+      for (let k = 0; k < 7; k++) {
+        const yPos = p.random(-len * 0.35, len * 0.35);
+        const side = p.random() < 0.5 ? -1 : 1;
+        const w = side < 0 ? vaneWidth(yPos).left : vaneWidth(yPos).right;
+        const x0 = side < 0 ? -w : w;
+        const sign = side < 0 ? -1 : 1;
         
-        // Barb length varies along the feather
-        let barbLength = featherWidth * (1 - Math.abs(t - 0.5) * 2);
-        if (t < 0.2) barbLength *= t / 0.2; // Taper at top
-        if (t > 0.8) barbLength *= (1 - t) / 0.2; // Taper at bottom
+        p.beginShape();
+        for (let t = 0; t <= 1; t += 0.25) {
+          const notchX = x0 + sign * (t * 6);
+          const notchY = yPos + t * 6;
+          p.vertex(notchX, notchY);
+        }
+        p.endShape();
+      }
+      
+      // 4) Barbs - short, angled strokes from rachis
+      p.stroke(20, 25, 30, 160);
+      p.strokeWeight(0.7);
+      
+      for (let yPos = -len * 0.38; yPos <= len * 0.38; yPos += 1.8) {
+        const ang = p.map(yPos, -len * 0.38, len * 0.38, p.radians(-25), p.radians(25));
+        const { left, right } = vaneWidth(yPos);
         
-        // Barb color - pure white with slight transparency
-        p.stroke(255, 255, 255, 200 - i * 3);
+        // Right side barbs (shorter)
+        let barbLen = right * 0.92;
+        if (barbLen > 1) {
+          p.push();
+          p.translate(0, yPos);
+          p.rotate(ang);
+          p.line(0, 0, barbLen, 0);
+          p.pop();
+        }
         
-        // Left side barbs
-        p.line(0, barbY, -barbLength/2, barbY + p.random(-2, 2));
-        // Right side barbs  
-        p.line(0, barbY, barbLength/2, barbY + p.random(-2, 2));
-        
-        // Add some barb detail lines for texture
-        if (i % 3 === 0) {
-          p.stroke(255, 255, 255, 100);
-          p.strokeWeight(0.5);
-          // Left barb details
-          for (let j = 0; j < 5; j++) {
-            const detailX = p.map(j, 0, 4, 0, -barbLength/2);
-            p.line(detailX, barbY, detailX - 1, barbY + p.random(-1, 1));
-          }
-          // Right barb details
-          for (let j = 0; j < 5; j++) {
-            const detailX = p.map(j, 0, 4, 0, barbLength/2);
-            p.line(detailX, barbY, detailX + 1, barbY + p.random(-1, 1));
-          }
-          p.strokeWeight(1);
+        // Left side barbs (longer)
+        barbLen = left * 0.92;
+        if (barbLen > 1) {
+          p.push();
+          p.translate(0, yPos);
+          p.rotate(-ang * 0.9);
+          p.line(0, 0, -barbLen, 0);
+          p.pop();
         }
       }
       
-      // Add subtle glow effect
-      p.drawingContext.shadowColor = 'rgba(255, 255, 255, 0.5)';
-      p.drawingContext.shadowBlur = 8;
-      p.stroke(255, 255, 255, 150);
-      p.strokeWeight(1);
-      p.line(0, -featherLength/2, 0, featherLength/2);
-      p.drawingContext.shadowBlur = 0;
+      // 5) Afterfeather tuft at base
+      p.stroke(20, 25, 30, 160);
+      p.strokeWeight(0.9);
       
-      // Feather tip
-      p.fill(255, 255, 255, 220);
+      for (let i = 0; i < 6; i++) {
+        const tuftY = len * 0.38 + i * 2.2;
+        p.line(0, tuftY, -8, tuftY);
+        p.line(0, tuftY, 8, tuftY);
+      }
+      
+      // Optional highlights along leading edge
       p.noStroke();
-      p.ellipse(0, -featherLength/2, 3, 6);
+      for (let yPos = -len * 0.4; yPos <= len * 0.4; yPos += 3) {
+        const r = vaneWidth(yPos).right;
+        p.fill(255, 255, 255, 18);
+        p.rect(r * 0.55, yPos - 0.6, r * 0.18, 1.2, 0.6);
+      }
       
       p.pop();
     }
     
-    // Add magical sparkles around feathers
+    // Add soft mystical glow around all feathers
+    p.drawingContext.shadowColor = 'rgba(255, 255, 255, 0.3)';
+    p.drawingContext.shadowBlur = 12;
+    p.fill(255, 255, 255, 40);
+    p.noStroke();
+    p.ellipse(0, 0, width * 1.5, height * 1.2);
+    p.drawingContext.shadowBlur = 0;
+    
+    // Add magical sparkles
     p.fill(255, 255, 255, 150);
     p.noStroke();
     for (let i = 0; i < 6; i++) {
-      const sparkleX = x + p.random(-width/2, width/2);
-      const sparkleY = y + p.random(-height/2, height/2);
+      const sparkleX = p.random(-width/2, width/2);
+      const sparkleY = p.random(-height/2, height/2);
       const twinkle = Math.sin(p.frameCount * 0.08 + i) * 0.5 + 0.5;
       p.circle(sparkleX, sparkleY, 1 + twinkle * 2);
     }
