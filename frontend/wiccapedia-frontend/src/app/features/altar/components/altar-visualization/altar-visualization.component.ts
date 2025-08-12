@@ -79,7 +79,7 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         meaning: 'Represents grounding and stability. Contains salt or earth for purification and banishing negativity.',
         position: { x: 250, y: 300 },
         size: { width: 50, height: 30 },
-        color: '#DEB887',
+        color: '#8B4513', // Saddle brown - more earthy
         type: 'bowl',
         element: 'Earth'
       },
@@ -91,7 +91,7 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         meaning: 'Represents healing, fertility, and emotional flow. Can be used for blessing rituals.',
         position: { x: 550, y: 300 },
         size: { width: 50, height: 40 },
-        color: '#87CEEB',
+        color: '#4682B4', // Steel blue - more watery
         type: 'bowl',
         element: 'Water'
       },
@@ -115,7 +115,7 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         meaning: 'Amplify magical energy and provide specific properties based on crystal type (love, healing, protection).',
         position: { x: 200, y: 180 },
         size: { width: 60, height: 40 },
-        color: '#ADD8E6',
+        color: '#BB9FFF', // Light purple - more mystical
         type: 'crystal'
       },
       // Feathers (top right)
@@ -126,7 +126,7 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         meaning: 'Connect with angelic energies and provide spiritual guidance. White feathers are best for purity.',
         position: { x: 600, y: 180 },
         size: { width: 50, height: 30 },
-        color: '#F0E68C',
+        color: '#FFFFFF',
         type: 'tool'
       },
       // Athame/Wand (bottom left)
@@ -361,30 +361,92 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
   }
 
   private drawBowl(p: p5, x: number, y: number, width: number, height: number, color: string): void {
-    // Bowl
+    p.push();
+    
+    // Animated floating effect
+    const floatOffset = Math.sin(p.frameCount * 0.05) * 2;
+    p.translate(0, floatOffset);
+    
+    // Bowl shadow
+    p.fill(0, 0, 0, 50);
+    p.noStroke();
+    p.ellipse(x + 3, y + 3, width, height);
+    
+    // Main bowl body with gradient effect
     p.fill(color);
-    p.stroke(0, 0, 0, 100);
-    p.strokeWeight(2);
+    p.stroke(0, 0, 0, 120);
+    p.strokeWeight(3);
     p.ellipse(x, y, width, height);
     
-    // Rim
-    p.stroke(0, 0, 0, 150);
-    p.strokeWeight(3);
+    // Bowl rim with highlight
+    p.stroke(255, 255, 255, 100);
+    p.strokeWeight(2);
     p.noFill();
-    p.ellipse(x, y - 5, width, height * 0.3);
+    p.ellipse(x, y - height * 0.15, width * 0.9, height * 0.2);
     
-    // Contents (water or earth)
-    if (color === '#87CEEB') {
-      // Water
-      p.fill(65, 105, 225, 150);
+    // Handle on left side
+    p.stroke(color);
+    p.strokeWeight(4);
+    p.noFill();
+    p.arc(x - width/2 - 8, y - height * 0.1, 16, 20, 0, Math.PI);
+    
+    // Handle on right side  
+    p.arc(x + width/2 + 8, y - height * 0.1, 16, 20, 0, Math.PI);
+    
+    // Contents with element-appropriate colors and effects
+    if (color === '#4682B4') {
+      // Water bowl - flowing water effect
+      p.fill(65, 105, 225, 180);
       p.noStroke();
-      p.ellipse(x, y, width * 0.8, height * 0.6);
+      p.ellipse(x, y, width * 0.75, height * 0.5);
+      
+      // Water ripples
+      p.stroke(255, 255, 255, 100);
+      p.strokeWeight(1);
+      p.noFill();
+      for (let i = 0; i < 3; i++) {
+        const rippleSize = 15 + i * 8;
+        const rippleAlpha = 150 - i * 50;
+        p.stroke(255, 255, 255, rippleAlpha);
+        p.ellipse(x, y, rippleSize, rippleSize * 0.3);
+      }
+      
+      // Magical sparkles on water surface
+      p.fill(255, 255, 255, 200);
+      p.noStroke();
+      for (let i = 0; i < 5; i++) {
+        const sparkleX = x + p.random(-width * 0.3, width * 0.3);
+        const sparkleY = y + p.random(-height * 0.2, height * 0.1);
+        const twinkle = Math.sin(p.frameCount * 0.1 + i) * 0.5 + 0.5;
+        p.circle(sparkleX, sparkleY, 2 + twinkle * 2);
+      }
     } else {
-      // Earth/Salt
+      // Earth bowl - rich earth and crystals
       p.fill(139, 69, 19);
       p.noStroke();
-      p.ellipse(x, y, width * 0.8, height * 0.6);
+      p.ellipse(x, y, width * 0.75, height * 0.5);
+      
+      // Salt/earth texture
+      p.fill(160, 82, 45);
+      p.noStroke();
+      for (let i = 0; i < 8; i++) {
+        const grainX = x + p.random(-width * 0.3, width * 0.3);
+        const grainY = y + p.random(-height * 0.2, height * 0.1);
+        p.circle(grainX, grainY, p.random(2, 4));
+      }
+      
+      // Small crystals in earth
+      p.fill(255, 215, 0, 150);
+      p.stroke(255, 215, 0);
+      p.strokeWeight(1);
+      for (let i = 0; i < 3; i++) {
+        const crystalX = x + p.random(-width * 0.25, width * 0.25);
+        const crystalY = y + p.random(-height * 0.15, height * 0.1);
+        p.triangle(crystalX, crystalY - 3, crystalX - 2, crystalY + 2, crystalX + 2, crystalY + 2);
+      }
     }
+    
+    p.pop();
   }
 
   private drawIncense(p: p5, x: number, y: number, width: number, height: number): void {
@@ -418,29 +480,108 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
   }
 
   private drawCrystals(p: p5, x: number, y: number, width: number, height: number, color: string): void {
-    // Multiple crystals
-    const crystalCount = 4;
-    for (let i = 0; i < crystalCount; i++) {
-      const offsetX = (i - crystalCount/2) * 15;
-      const offsetY = p.random(-5, 5);
-      const crystalHeight = p.random(15, 25);
-      
-      p.fill(color);
-      p.stroke(0, 0, 0, 100);
-      p.strokeWeight(1);
-      
-      // Crystal shape
-      p.beginShape();
-      p.vertex(x + offsetX, y + offsetY);
-      p.vertex(x + offsetX - 5, y + offsetY + crystalHeight);
-      p.vertex(x + offsetX + 5, y + offsetY + crystalHeight);
-      p.endShape(p.CLOSE);
-      
-      // Crystal top
-      p.triangle(x + offsetX, y + offsetY - 8, 
-                x + offsetX - 3, y + offsetY, 
-                x + offsetX + 3, y + offsetY);
+    p.push();
+    
+    // Magical glow around crystal cluster
+    p.drawingContext.shadowColor = color;
+    p.drawingContext.shadowBlur = 15;
+    
+    // Based on the Processing sketch - create complex crystal cluster
+    const scale = 0.3; // Scale down to fit the altar space
+    p.translate(x - width/2, y - height/2);
+    p.scale(scale);
+    
+    p.stroke(0, 0, 0);
+    p.fill(color);
+    p.strokeWeight(2);
+    
+    // Largest crystal on the ground, to the left
+    p.strokeWeight(3);
+    p.beginShape();
+    p.vertex(35, 275);
+    p.vertex(65, 250);
+    p.vertex(100, 265);
+    p.vertex(125, 285);
+    p.vertex(75, 300);
+    p.vertex(40, 290);
+    p.endShape(p.CLOSE);
+    
+    // Internal crystal structure lines
+    p.strokeWeight(1);
+    p.stroke(0, 0, 0, 150);
+    p.line(55, 275, 65, 250);
+    p.line(55, 275, 75, 300);
+    p.line(55, 275, 40, 290);
+    p.line(55, 275, 95, 275);
+    p.line(95, 275, 125, 285);
+    
+    // Largest vertical crystal
+    p.strokeWeight(3);
+    p.stroke(0, 0, 0);
+    p.beginShape();
+    p.vertex(90, 260);
+    p.vertex(30, 50);
+    p.vertex(50, 0);
+    p.vertex(80, 10);
+    p.vertex(110, 70);
+    p.vertex(125, 200);
+    p.endShape(p.CLOSE);
+    
+    // Internal structure
+    p.strokeWeight(1);
+    p.stroke(0, 0, 0, 150);
+    p.line(60, 40, 30, 50);
+    p.line(60, 40, 50, 0);
+    p.line(60, 40, 80, 10);
+    p.line(60, 40, 50, 110);
+    p.line(105, 65, 65, 165);
+    
+    // Left crystal
+    p.strokeWeight(3);
+    p.stroke(0, 0, 0);
+    p.beginShape();
+    p.vertex(55, 255);
+    p.vertex(10, 190);
+    p.vertex(0, 140);
+    p.vertex(15, 115);
+    p.vertex(57, 150);
+    p.vertex(90, 260);
+    p.vertex(65, 250);
+    p.endShape(p.CLOSE);
+    
+    // Internal structure
+    p.strokeWeight(1);
+    p.stroke(0, 0, 0, 150);
+    p.line(20, 150, 10, 190);
+    p.line(20, 150, 15, 115);
+    p.line(40, 175, 42, 237);
+    p.line(40, 175, 65, 165);
+    
+    // Small crystal cluster on the right
+    p.strokeWeight(3);
+    p.stroke(0, 0, 0);
+    p.beginShape();
+    p.vertex(150, 100);
+    p.vertex(200, 85);
+    p.vertex(195, 135);
+    p.vertex(145, 200);
+    p.vertex(135, 185);
+    p.vertex(125, 200);
+    p.vertex(120, 160);
+    p.endShape(p.CLOSE);
+    
+    // Add magical sparkles around crystals
+    p.drawingContext.shadowBlur = 0;
+    p.fill(255, 255, 255, 200);
+    p.noStroke();
+    for (let i = 0; i < 8; i++) {
+      const sparkleX = p.random(0, 200);
+      const sparkleY = p.random(0, 250);
+      const twinkle = Math.sin(p.frameCount * 0.1 + i) * 0.5 + 0.5;
+      p.circle(sparkleX, sparkleY, 1 + twinkle * 3);
     }
+    
+    p.pop();
   }
 
   private drawTool(p: p5, x: number, y: number, width: number, height: number, color: string, id: string): void {
@@ -457,13 +598,8 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         p.rect(x + width/2 - width * 0.3, y - height/2, width * 0.3, height, 3);
         break;
       case 'feathers':
-        // Draw feathers
-        for (let i = 0; i < 3; i++) {
-          p.fill(255, 255, 255, 200);
-          p.ellipse(x + (i - 1) * 15, y, 12, height);
-          p.stroke(200, 200, 200);
-          p.line(x + (i - 1) * 15, y - height/2, x + (i - 1) * 15, y + height/2);
-        }
+        // Draw detailed white feathers based on Processing sketch
+        this.drawDetailedFeathers(p, x, y, width, height);
         break;
       case 'cauldron':
         // Cauldron
@@ -479,6 +615,102 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
       default:
         p.rect(x - width/2, y - height/2, width, height, 5);
     }
+  }
+
+  private drawDetailedFeathers(p: p5, x: number, y: number, width: number, height: number): void {
+    p.push();
+    
+    // Draw multiple feathers with detailed structure based on Processing sketch
+    const featherCount = 3;
+    for (let f = 0; f < featherCount; f++) {
+      const offsetX = (f - 1) * 16;
+      const featherX = x + offsetX;
+      const featherLength = height * 0.8;
+      const featherWidth = width * 0.15;
+      
+      // Feather rotation for natural look
+      const rotation = (f - 1) * 0.1;
+      
+      p.push();
+      p.translate(featherX, y);
+      p.rotate(rotation);
+      
+      // Draw feather shadow
+      p.fill(0, 0, 0, 30);
+      p.noStroke();
+      p.ellipse(2, 2, featherWidth + 2, featherLength + 2);
+      
+      // Main feather shaft (rachis)
+      p.stroke(220, 220, 220);
+      p.strokeWeight(2);
+      p.line(0, -featherLength/2, 0, featherLength/2);
+      
+      // Draw barbs (feather fibers) with natural curvature
+      p.strokeWeight(1);
+      const barbCount = 20;
+      
+      for (let i = 0; i < barbCount; i++) {
+        const t = i / (barbCount - 1);
+        const barbY = p.map(t, 0, 1, -featherLength/2 + 5, featherLength/2 - 5);
+        
+        // Barb length varies along the feather
+        let barbLength = featherWidth * (1 - Math.abs(t - 0.5) * 2);
+        if (t < 0.2) barbLength *= t / 0.2; // Taper at top
+        if (t > 0.8) barbLength *= (1 - t) / 0.2; // Taper at bottom
+        
+        // Barb color - pure white with slight transparency
+        p.stroke(255, 255, 255, 200 - i * 3);
+        
+        // Left side barbs
+        p.line(0, barbY, -barbLength/2, barbY + p.random(-2, 2));
+        // Right side barbs  
+        p.line(0, barbY, barbLength/2, barbY + p.random(-2, 2));
+        
+        // Add some barb detail lines for texture
+        if (i % 3 === 0) {
+          p.stroke(255, 255, 255, 100);
+          p.strokeWeight(0.5);
+          // Left barb details
+          for (let j = 0; j < 5; j++) {
+            const detailX = p.map(j, 0, 4, 0, -barbLength/2);
+            p.line(detailX, barbY, detailX - 1, barbY + p.random(-1, 1));
+          }
+          // Right barb details
+          for (let j = 0; j < 5; j++) {
+            const detailX = p.map(j, 0, 4, 0, barbLength/2);
+            p.line(detailX, barbY, detailX + 1, barbY + p.random(-1, 1));
+          }
+          p.strokeWeight(1);
+        }
+      }
+      
+      // Add subtle glow effect
+      p.drawingContext.shadowColor = 'rgba(255, 255, 255, 0.5)';
+      p.drawingContext.shadowBlur = 8;
+      p.stroke(255, 255, 255, 150);
+      p.strokeWeight(1);
+      p.line(0, -featherLength/2, 0, featherLength/2);
+      p.drawingContext.shadowBlur = 0;
+      
+      // Feather tip
+      p.fill(255, 255, 255, 220);
+      p.noStroke();
+      p.ellipse(0, -featherLength/2, 3, 6);
+      
+      p.pop();
+    }
+    
+    // Add magical sparkles around feathers
+    p.fill(255, 255, 255, 150);
+    p.noStroke();
+    for (let i = 0; i < 6; i++) {
+      const sparkleX = x + p.random(-width/2, width/2);
+      const sparkleY = y + p.random(-height/2, height/2);
+      const twinkle = Math.sin(p.frameCount * 0.08 + i) * 0.5 + 0.5;
+      p.circle(sparkleX, sparkleY, 1 + twinkle * 2);
+    }
+    
+    p.pop();
   }
 
   private drawLabel(p: p5, item: AltarItem): void {
