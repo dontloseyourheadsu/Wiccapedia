@@ -603,15 +603,8 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         this.drawDetailedFeathers(p, x, y, width, height);
         break;
       case 'cauldron':
-        // Cauldron
-        p.fill(50, 50, 50);
-        p.ellipse(x, y, width, height);
-        // Handle
-        p.noFill();
-        p.stroke(50, 50, 50);
-        p.strokeWeight(3);
-        p.arc(x - width/2 - 5, y, 15, 15, 0, p.PI);
-        p.arc(x + width/2 + 5, y, 15, 15, 0, p.PI);
+        // Draw detailed cauldron with base based on your HTML example
+        this.drawDetailedCauldron(p, x, y, width, height);
         break;
       default:
         p.rect(x - width/2, y - height/2, width, height, 5);
@@ -879,6 +872,94 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
       }
       p.endShape();
     }
+    
+    p.pop();
+  }
+
+  private drawDetailedCauldron(p: p5, x: number, y: number, width: number, height: number): void {
+    p.push();
+    
+    // Scale the cauldron to fit the allocated space
+    const radius = Math.min(width, height) * 0.4;
+    
+    // Draw the bowl with gradient (black to dark gray)
+    for (let r = radius; r > 0; r--) {
+      const inter = p.map(r, 0, radius, 0, 1);
+      const c = p.lerpColor(p.color(20), p.color(80), inter); // Black to dark gray
+      p.stroke(c);
+      p.strokeWeight(2);
+      // Draw semicircle (bowl shape)
+      p.arc(x, y, r * 2, r * 2, 0, Math.PI);
+    }
+    
+    // Draw trapezoid base at the bottom of the bowl
+    p.fill(60, 60, 60); // Dark gray for base
+    p.noStroke();
+    
+    const baseHeight = 20;
+    const baseTopWidth = radius * 1.6; // Width at bowl bottom
+    const baseBottomWidth = radius * 2.0;
+    const baseY = y + radius; // Start at bottom of bowl
+    
+    // Draw trapezoid base
+    p.beginShape();
+    p.vertex(x - baseTopWidth/2, baseY); // Top left
+    p.vertex(x + baseTopWidth/2, baseY); // Top right
+    p.vertex(x + baseBottomWidth/2, baseY + baseHeight); // Bottom right
+    p.vertex(x - baseBottomWidth/2, baseY + baseHeight); // Bottom left
+    p.endShape(p.CLOSE);
+    
+    // Draw oval cover (line-like with circular corners)
+    p.fill(100, 100, 100); // Gray for cover
+    p.noStroke();
+    
+    // Start at right top of bowl semicircle
+    const startX = x + radius;
+    const startY = y;
+    
+    // Calculate end position with 45 degree angle and 110% width
+    const coverLength = radius * 2 * 1.1; // 110% of bowl width
+    const angle45 = p.radians(-45); // 45 degree lift (negative for upward)
+    const endX = startX + coverLength * Math.cos(angle45);
+    const endY = startY + coverLength * Math.sin(angle45);
+    
+    // Draw very thin oval (line-like with circular corners)
+    p.push();
+    p.translate((startX + endX) / 2, (startY + endY) / 2);
+    p.rotate(angle45);
+    p.ellipse(0, 0, coverLength, 6); // Very thin height to look like a line
+    p.pop();
+    
+    // Add traditional cauldron handles
+    p.noFill();
+    p.stroke(80, 80, 80);
+    p.strokeWeight(3);
+    
+    // Left handle
+    p.arc(x - radius - 8, y - radius * 0.3, 16, 20, 0, Math.PI);
+    // Right handle
+    p.arc(x + radius + 8, y - radius * 0.3, 16, 20, 0, Math.PI);
+    
+    // Add magical steam/smoke effect
+    p.stroke(200, 200, 200, 100);
+    p.strokeWeight(2);
+    p.noFill();
+    
+    for (let i = 0; i < 3; i++) {
+      const smokeX = x + (i - 1) * radius * 0.3;
+      p.beginShape();
+      for (let j = 0; j < 6; j++) {
+        const waveX = smokeX + Math.sin(j * 0.8 + p.frameCount * 0.1 + i) * 4;
+        const waveY = y - radius - j * 12;
+        p.vertex(waveX, waveY);
+      }
+      p.endShape();
+    }
+    
+    // Add mystical glow around the cauldron
+    p.fill(100, 50, 150, 30);
+    p.noStroke();
+    p.ellipse(x, y, radius * 3, radius * 2);
     
     p.pop();
   }
