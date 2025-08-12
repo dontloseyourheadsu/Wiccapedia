@@ -135,7 +135,7 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
         name: 'Athame / Wand',
         description: 'Invocation, Circle Casting',
         meaning: 'Direct energy and cast protective circles. Athame for willpower, wand for invocation and blessing.',
-        position: { x: 200, y: 420 },
+        position: { x: 200, y: 440 }, // Moved down to be more centered on table
         size: { width: 70, height: 25 },
         color: '#D3D3D3',
         type: 'tool'
@@ -591,11 +591,8 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
     
     switch (id) {
       case 'athame':
-        // Athame blade
-        p.rect(x - width/2, y - height/2, width * 0.7, height, 5);
-        // Handle
-        p.fill(101, 67, 33);
-        p.rect(x + width/2 - width * 0.3, y - height/2, width * 0.3, height, 3);
+        // Draw detailed magical wand based on your HTML example
+        this.drawMagicalWand(p, x, y, width, height);
         break;
       case 'feathers':
         // Draw detailed white feathers based on Processing sketch
@@ -708,6 +705,175 @@ export class AltarVisualizationComponent implements OnInit, OnDestroy {
       const sparkleY = y + p.random(-height/2, height/2);
       const twinkle = Math.sin(p.frameCount * 0.08 + i) * 0.5 + 0.5;
       p.circle(sparkleX, sparkleY, 1 + twinkle * 2);
+    }
+    
+    p.pop();
+  }
+
+  private drawMagicalWand(p: p5, x: number, y: number, width: number, height: number): void {
+    p.push();
+    
+    // Position and angle the wand (diagonal pointing up-right)
+    const wandLength = width * 0.9;
+    const wandAngle = -Math.PI / 6; // 30 degrees up
+    
+    p.translate(x, y);
+    p.rotate(wandAngle);
+    
+    // Draw wand stick with wood texture
+    this.drawWandStick(p, wandLength, height * 0.3);
+    
+    // Draw handle details
+    this.drawWandHandle(p, wandLength);
+    
+    p.pop();
+    
+    // Calculate crystal position (at the tip with proper separation)
+    const crystalOffset = wandLength * 0.85 + 15; // Add extra separation from stick end
+    const crystalX = x + Math.cos(wandAngle) * crystalOffset;
+    const crystalY = y + Math.sin(wandAngle) * crystalOffset;
+    
+    // Draw crystal at the tip
+    this.drawWandCrystal(p, crystalX, crystalY);
+    
+    // Draw magical aura around crystal (positioned away from stick)
+    this.drawWandAura(p, crystalX, crystalY);
+  }
+
+  private drawWandStick(p: p5, wandLength: number, thickness: number): void {
+    // Main stick with gradient (wood-like texture)
+    // Only draw up to 80% of length to leave space for crystal
+    const stickEnd = wandLength * 0.8;
+    
+    for (let i = 0; i < stickEnd; i += 2) {
+      const t = i / stickEnd;
+      const currentThickness = p.lerp(thickness, thickness * 0.6, t); // Tapers toward tip
+      
+      // Wood color gradient with natural variation
+      const r = p.lerp(101, 139, Math.sin(t * 10) * 0.3 + 0.7);
+      const g = p.lerp(67, 95, Math.sin(t * 10) * 0.3 + 0.7);
+      const b = p.lerp(33, 51, Math.sin(t * 10) * 0.3 + 0.7);
+      
+      p.stroke(r, g, b);
+      p.strokeWeight(currentThickness);
+      const naturalCurve = Math.sin(i * 0.05) * 0.5; // Slight natural curve
+      p.point(i, naturalCurve);
+    }
+    
+    // Wood grain lines for texture
+    p.stroke(80, 50, 25, 150);
+    p.strokeWeight(1);
+    for (let i = 0; i < 3; i++) {
+      const yOffset = (i - 1) * thickness * 0.3;
+      p.line(wandLength * 0.1, yOffset, stickEnd * 0.9, yOffset * 0.8);
+    }
+  }
+
+  private drawWandHandle(p: p5, wandLength: number): void {
+    const handleStart = wandLength * 0.1;
+    const handleLength = wandLength * 0.3;
+    
+    // Leather wrap sections
+    p.fill(61, 43, 31);
+    p.noStroke();
+    
+    for (let i = 0; i < 6; i++) {
+      const x = handleStart + i * (handleLength / 6);
+      const wrapWidth = 8;
+      const wrapHeight = 12;
+      p.ellipse(x, 0, wrapWidth, wrapHeight);
+    }
+    
+    // Metal bands for detail
+    p.fill(120, 120, 140);
+    p.rect(handleStart + 10, -3, 4, 6);
+    p.rect(handleStart + handleLength - 10, -3, 4, 6);
+    
+    // End cap
+    p.fill(80, 70, 60);
+    p.ellipse(handleStart - 5, 0, 10, 10);
+  }
+
+  private drawWandCrystal(p: p5, x: number, y: number): void {
+    p.push();
+    p.translate(x, y);
+    
+    // Crystal core with mystical colors
+    p.fill(200, 180, 255, 200);
+    p.stroke(255, 255, 255, 150);
+    p.strokeWeight(1.5);
+    
+    // Main crystal shape (diamond-like)
+    p.beginShape();
+    p.vertex(0, -12);   // top point
+    p.vertex(5, -5);    // top right
+    p.vertex(7, 5);     // bottom right
+    p.vertex(0, 15);    // bottom point
+    p.vertex(-7, 5);    // bottom left
+    p.vertex(-5, -5);   // top left
+    p.endShape(p.CLOSE);
+    
+    // Crystal facets for depth
+    p.fill(255, 240, 255, 100);
+    p.triangle(0, -12, 5, -5, 0, 0);
+    p.triangle(0, -12, -5, -5, 0, 0);
+    
+    p.fill(180, 160, 255, 80);
+    p.triangle(0, 0, 5, -5, 7, 5);
+    p.triangle(0, 0, -5, -5, -7, 5);
+    
+    // Crystal highlights
+    p.stroke(255, 255, 255, 200);
+    p.strokeWeight(0.8);
+    p.line(-1, -9, 1, -6);
+    p.line(-3, -3, -1, 0);
+    p.line(1, 0, 3, -3);
+    
+    p.pop();
+  }
+
+  private drawWandAura(p: p5, x: number, y: number): void {
+    p.push();
+    p.translate(x, y);
+    
+    // Outer magical glow - increased radius for better separation
+    for (let r = 50; r > 0; r -= 6) {
+      const alpha = p.map(r, 0, 50, 35, 0);
+      p.fill(200, 180, 255, alpha);
+      p.noStroke();
+      p.ellipse(0, 0, r, r);
+    }
+    
+    // Magical particles circling the crystal - larger orbit
+    const time = p.frameCount * 0.02;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + time;
+      const distance = 25 + Math.sin(time + i) * 10; // Increased distance
+      const px = Math.cos(angle) * distance;
+      const py = Math.sin(angle) * distance;
+      
+      const size = 2 + Math.sin(time * 2 + i) * 1;
+      const alpha = 150 + Math.sin(time * 3 + i) * 100;
+      
+      p.fill(255, 200, 255, alpha);
+      p.noStroke();
+      p.ellipse(px, py, size, size);
+    }
+    
+    // Energy wisps around crystal - larger radius
+    p.stroke(180, 160, 255, 80);
+    p.strokeWeight(1.5);
+    p.noFill();
+    for (let i = 0; i < 2; i++) {
+      const offset = i * Math.PI + time;
+      p.beginShape();
+      for (let t = 0; t < Math.PI * 2; t += 0.3) {
+        const r = 20 + Math.sin(t * 2 + offset) * 8; // Increased radius
+        const px = Math.cos(t + offset) * r;
+        const py = Math.sin(t + offset) * r;
+        p.vertex(px, py);
+      }
+      p.endShape();
     }
     
     p.pop();
