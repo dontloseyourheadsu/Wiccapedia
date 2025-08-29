@@ -4,6 +4,24 @@
     <p class="runes-subtitle">Explore the ancient alphabets of the North</p>
   </div>
 
+  <div
+    class="runes-description"
+    style="
+      margin-bottom: 24px;
+      text-align: center;
+      color: var(--text-light);
+      font-size: 1.08rem;
+    "
+  >
+    Runes are the oldest form of writing used by Germanic peoples, including the
+    Norse and other northern European tribes. The earliest system is the Elder
+    Futhark, used roughly between 150 CE and 800 CE. The word futhark comes from
+    the first six runes: <span class="runes">ᚠ</span> (F) –
+    <span class="runes">ᚢ</span> (U) – <span class="runes">ᚦ</span> (Th) –
+    <span class="runes">ᚨ</span> (A) – <span class="runes">ᚱ</span> (R) –
+    <span class="runes">ᚲ</span> (K).
+  </div>
+
   <div class="runes-tabs">
     <button [class.active]="tab() === 'elder'" (click)="setTab('elder')">
       Elder Futhark
@@ -18,7 +36,172 @@
 
   <div class="runes-tab-content">
     @if (tab() === 'elder') {
-    <div class="tab-panel">Elder Futhark content coming soon...</div>
+    <div class="tab-panel">
+      <h2>The Elder Futhark: Full Investigation</h2>
+      <h3>1. Historical Context</h3>
+      <p>
+        The <strong>Elder Futhark</strong> is the earliest known runic alphabet,
+        in use from about <strong>150 CE to 800 CE</strong>. It spread across
+        the Germanic world, from southern Scandinavia to northern Germany, and
+        even to parts of Eastern Europe.
+      </p>
+      <ul>
+        <li>
+          Likely developed from <strong>Italic or Latin alphabets</strong>, but
+          adapted for Proto-Germanic speech.
+        </li>
+        <li>
+          The name “Futhark” comes from its first six runes:
+          <strong
+            ><span class="runes">ᚠ</span> (F) – <span class="runes">ᚢ</span> (U)
+            – <span class="runes">ᚦ</span> (Th) –
+            <span class="runes">ᚨ</span> (A) – <span class="runes">ᚱ</span> (R)
+            – <span class="runes">ᚲ</span> (K)</strong
+          >.
+        </li>
+      </ul>
+      <h3>2. Structure of the Elder Futhark</h3>
+      <p>
+        The alphabet contains <strong>24 runes</strong>, divided into
+        <strong>three ættir (families)</strong> of eight runes each. These
+        divisions may have had ritual or mystical meaning.
+      </p>
+      <ul>
+        <li>
+          <strong
+            ><span class="runes">ᚠᚢᚦᚨᚱᚲᚷᚹ</span> First ætt (Freyr’s Ætt)</strong
+          >: Associated with wealth, fertility, and beginnings.
+        </li>
+        <li>
+          <strong
+            ><span class="runes">ᚺᚾᛁᛃᛇᛈᛉᛊ</span> Second ætt (Heimdall’s
+            Ætt)</strong
+          >: Linked with conflict, trials, and transformation.
+        </li>
+        <li>
+          <strong
+            ><span class="runes">ᛏᛒᛖᛗᛚᛜᛞᛟ</span> Third ætt (Tyr’s Ætt)</strong
+          >: Connected to destiny, spirituality, and cosmic forces.
+        </li>
+      </ul>
+      <h3>3. The 24 Runes and Their Meanings</h3>
+      <div class="elder-futhark-chart">
+        <h4>First Ætt (<span class="runes">ᚠ–ᚷ</span>)</h4>
+        <ol>
+          <li>
+            <span class="runes">ᚠ</span> <b>Fehu (F)</b> – cattle, wealth,
+            prosperity
+          </li>
+          <li>
+            <span class="runes">ᚢ</span> <b>Uruz (U)</b> – aurochs, primal
+            strength, health
+          </li>
+          <li>
+            <span class="runes">ᚦ</span> <b>Thurisaz (Th)</b> – thorn/giant,
+            danger, chaos, protection
+          </li>
+          <li>
+            <span class="runes">ᚨ</span> <b>Ansuz (A)</b> – Odin/god, wisdom,
+            inspiration
+          </li>
+          <li>
+            <span class="runes">ᚱ</span> <b>Raido (R)</b> – journey, travel,
+            rhythm
+          </li>
+          <li>
+            <span class="runes">ᚲ</span> <b>Kaunan/Kenaz (K/C)</b> – torch,
+            knowledge, illumination
+          </li>
+          <li>
+            <span class="runes">ᚷ</span> <b>Gebo (G)</b> – gift, generosity,
+            partnership
+          </li>
+          <li>
+            <span class="runes">ᚹ</span> <b>Wunjo (W/V)</b> – joy, harmony,
+            success
+          </li>
+        </ol>
+        <h4>Second Ætt (<span class="runes">ᚺ–ᛉ</span>)</h4>
+        <ol start="9">
+          <li>
+            <span class="runes">ᚺ</span> <b>Hagalaz (H)</b> – hail, disruption,
+            transformation
+          </li>
+          <li>
+            <span class="runes">ᚾ</span> <b>Naudiz (N)</b> – need, hardship,
+            endurance
+          </li>
+          <li>
+            <span class="runes">ᛁ</span> <b>Isa (I)</b> – ice, stillness,
+            stagnation, clarity
+          </li>
+          <li>
+            <span class="runes">ᛃ</span> <b>Jera (J/Y)</b> – year/harvest,
+            cycles, reward
+          </li>
+          <li>
+            <span class="runes">ᛇ</span> <b>Eiwaz (Ei)</b> – yew tree, death,
+            rebirth, resilience
+          </li>
+          <li>
+            <span class="runes">ᛈ</span> <b>Perthro (P)</b> – mystery, chance,
+            fate, hidden things
+          </li>
+          <li>
+            <span class="runes">ᛉ</span> <b>Algiz (Z/R)</b> – elk, protection,
+            defense, spirituality
+          </li>
+          <li>
+            <span class="runes">ᛊ</span> <b>Sowilo (S)</b> – sun, vitality,
+            success
+          </li>
+        </ol>
+        <h4>Third Ætt (<span class="runes">ᛏ–ᛟ</span>)</h4>
+        <ol start="17">
+          <li>
+            <span class="runes">ᛏ</span> <b>Tiwaz (T)</b> – Tyr, justice, honor,
+            sacrifice
+          </li>
+          <li>
+            <span class="runes">ᛒ</span> <b>Berkano (B)</b> – birch tree, birth,
+            fertility, growth
+          </li>
+          <li>
+            <span class="runes">ᛖ</span> <b>Ehwaz (E)</b> – horse, movement,
+            partnership, trust
+          </li>
+          <li>
+            <span class="runes">ᛗ</span> <b>Mannaz (M)</b> – man/human, society,
+            cooperation
+          </li>
+          <li>
+            <span class="runes">ᛚ</span> <b>Laguz (L)</b> – water, intuition,
+            flow, emotion
+          </li>
+          <li>
+            <span class="runes">ᛜ</span> <b>Ingwaz (Ng)</b> – god Ing/Freyr,
+            fertility, stored energy
+          </li>
+          <li>
+            <span class="runes">ᛞ</span> <b>Dagaz (D)</b> – day, breakthrough,
+            awakening
+          </li>
+          <li>
+            <span class="runes">ᛟ</span> <b>Othala (O)</b> – heritage, homeland,
+            inheritance
+          </li>
+        </ol>
+      </div>
+      <div class="elder-futhark-summary">
+        <b>Summary:</b> The <b>Elder Futhark (150–800 CE)</b> is the original
+        24-rune alphabet of the Germanic peoples. It was a practical writing
+        system, but also carried deep symbolic and spiritual meaning. Each rune
+        had a sound, a literal meaning (like “cattle” or “sun”), and a symbolic
+        force (wealth, vitality, protection). Archaeological finds confirm its
+        wide use in both daily life and ritual. Its legacy endures in the
+        simplified Younger Futhark and modern cultural revivals.
+      </div>
+    </div>
     } @if (tab() === 'younger') {
     <div class="tab-panel">Younger Futhark content coming soon...</div>
     } @if (tab() === 'anglo') {
