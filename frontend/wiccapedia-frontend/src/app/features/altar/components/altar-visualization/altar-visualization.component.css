@@ -50,6 +50,7 @@
   box-shadow: var(--shadow-glow);
   max-width: 300px;
   z-index: 10;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   animation: fadeIn 0.3s ease-in-out;
 }
@@ -102,6 +103,7 @@
   border-radius: 15px;
   border: 1px solid var(--border-color);
   text-align: center;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   max-width: 500px;
 }

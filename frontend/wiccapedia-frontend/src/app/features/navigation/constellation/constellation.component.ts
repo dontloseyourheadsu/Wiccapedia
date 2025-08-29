@@ -63,6 +63,13 @@ export class ConstellationComponent implements OnInit, OnDestroy {
       subtitle: 'Invoca los poderes de la naturaleza',
       icon: 'fas fa-star',
       description: 'Descubre los rituales y ceremonias del altar pentagonal'
+    },
+    {
+      name: 'runes',
+      title: 'Runes',
+      subtitle: 'Explore the ancient alphabets of the North',
+      icon: 'fas fa-rune',
+      description: 'Descubre los alfabetos rúnicos: Elder Futhark, Younger Futhark y Anglo-Saxon Futhorc'
     }
   ];
 
@@ -119,10 +126,11 @@ export class ConstellationComponent implements OnInit, OnDestroy {
   }
 
   private setupStars(p: p5): void {
-    // Create constellation pattern - simple two-star navigation
+    // Create constellation pattern - three-star navigation
     const constellationPattern = [
-      { x: 300, y: 250, name: 'Gems Portal', page: 'gems', size: 15 },
-      { x: 500, y: 200, name: 'Altar Portal', page: 'altar', size: 15 }
+      { x: 250, y: 250, name: 'Gems Portal', page: 'gems', size: 15 },
+      { x: 400, y: 180, name: 'Altar Portal', page: 'altar', size: 15 },
+      { x: 550, y: 250, name: 'Runes Portal', page: 'runes', size: 15 }
     ];
 
     // Scale constellation to fit screen
@@ -146,13 +154,13 @@ export class ConstellationComponent implements OnInit, OnDestroy {
   }
 
   private setupConnections(): void {
-    // Connect the two portal stars
-    if (this.stars.length >= 2) {
-      this.connections.push({
-        from: this.stars[0],
-        to: this.stars[1],
-        opacity: 0.6
-      });
+    // Connect all portal stars in a triangle
+    if (this.stars.length === 3) {
+      this.connections.push(
+        { from: this.stars[0], to: this.stars[1], opacity: 0.6 },
+        { from: this.stars[1], to: this.stars[2], opacity: 0.6 },
+        { from: this.stars[2], to: this.stars[0], opacity: 0.6 }
+      );
     }
   }
 
@@ -361,20 +369,23 @@ export class ConstellationComponent implements OnInit, OnDestroy {
     const offsetY = p.height * 0.3;
     
     const originalPattern = [
-      { x: 300, y: 250 },
-      { x: 500, y: 200 }
+      { x: 250, y: 250 },
+      { x: 400, y: 180 },
+      { x: 550, y: 250 }
     ];
-    
     this.stars.forEach((star, i) => {
-      star.x = originalPattern[i].x * scaleX + offsetX;
-      star.y = originalPattern[i].y * scaleY + offsetY;
+      if (originalPattern[i]) {
+        star.x = originalPattern[i].x * scaleX + offsetX;
+        star.y = originalPattern[i].y * scaleY + offsetY;
+      }
     });
   }
 
   private getStarColor(page: string): { r: number; g: number; b: number } {
     const colors = {
       'gems': { r: 255, g: 215, b: 0 },      // Gold for gems
-      'altar': { r: 138, g: 43, b: 226 }     // Purple for altar
+      'altar': { r: 138, g: 43, b: 226 },    // Purple for altar
+      'runes': { r: 0, g: 191, b: 255 }      // Deep sky blue for runes
     };
     return colors[page as keyof typeof colors] || { r: 255, g: 255, b: 255 };
   }

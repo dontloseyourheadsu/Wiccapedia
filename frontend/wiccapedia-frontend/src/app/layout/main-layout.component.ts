@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GemListComponent } from '../features/gems/list/gem-list.component';
 import { AltarMainComponent } from '../features/altar/pages/altar-main/altar-main.component';
+import { RunesMainComponent } from '../features/runes/pages/runes-main/runes-main.component';
 import { ConstellationComponent } from '../features/navigation/constellation/constellation.component';
 
 interface PageConfig {
@@ -14,7 +15,7 @@ interface PageConfig {
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, GemListComponent, AltarMainComponent, ConstellationComponent],
+  imports: [CommonModule, GemListComponent, AltarMainComponent, RunesMainComponent, ConstellationComponent],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
@@ -35,6 +36,12 @@ export class MainLayoutComponent {
       title: 'Pentagram Altar',
       subtitle: 'Invoca los poderes de la naturaleza',
       icon: 'fas fa-star'
+    },
+    'runes': {
+      name: 'runes',
+      title: 'Runes',
+      subtitle: 'Explore the ancient alphabets of the North',
+      icon: 'fas fa-rune'
     }
   };
 
