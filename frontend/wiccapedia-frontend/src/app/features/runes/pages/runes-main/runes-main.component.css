@@ -1,3 +1,102 @@
+.tab-panel ul li,
+.tab-panel ol li {
+  text-align: left !important;
+}
+/* Only center headers and summary, not lists or general text */
+.runes-description {
+  margin-bottom: 24px;
+  color: var(--text-light);
+  font-size: 1.08rem;
+  /* No text-align here, keep default left for readability */
+}
+.tab-panel h2,
+.tab-panel h3 {
+  text-align: center;
+}
+.elder-futhark-summary {
+  text-align: center;
+}
+/* Themed bullet lists for runes page */
+.tab-panel ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 18px 0 18px 0;
+}
+.tab-panel ul li {
+  position: relative;
+  padding-left: 1.7em;
+  margin-bottom: 12px;
+  color: var(--text-light);
+  font-size: 1.08em;
+  line-height: 1.6;
+}
+.tab-panel ul li:last-child {
+  margin-bottom: 0;
+}
+.tab-panel ul li::before {
+  content: '\2726'; /* Unicode star symbol */
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  color: var(--accent-color);
+  font-size: 1.1em;
+  line-height: 1;
+}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Runic&display=swap');
+
+.runes {
+  font-family: 'Noto Sans Runic', 'Segoe UI Historic', 'Junicode', 'Unifont', serif;
+  font-size: 1.5em;
+  letter-spacing: 0.15em;
+  color: var(--accent-color);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.elder-futhark-chart {
+  margin: 32px auto 24px auto;
+  background: rgba(0,0,0,0.10);
+  border-radius: 16px;
+  padding: 24px 16px 16px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  max-width: 600px;
+}
+.elder-futhark-chart h4 {
+  color: var(--accent-color);
+  margin-top: 18px;
+  margin-bottom: 8px;
+  font-size: 1.15em;
+}
+.elder-futhark-chart ol {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+.elder-futhark-chart li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 1.08em;
+}
+.elder-futhark-chart li:last-child {
+  border-bottom: none;
+}
+.elder-futhark-chart .runes {
+  font-size: 1.7em;
+  margin-right: 8px;
+}
+.elder-futhark-summary {
+  margin-top: 24px;
+  background: rgba(0,0,0,0.08);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 1.08em;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
 /* Runes Main Page Styles */
 .runes-main-container {
   max-width: 900px;
