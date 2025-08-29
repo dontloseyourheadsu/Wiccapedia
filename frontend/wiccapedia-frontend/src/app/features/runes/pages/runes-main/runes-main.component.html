@@ -1,0 +1,28 @@
+<div class="runes-main-container">
+  <div class="runes-header">
+    <h1><i class="fas fa-rune"></i> Runes</h1>
+    <p class="runes-subtitle">Explore the ancient alphabets of the North</p>
+  </div>
+
+  <div class="runes-tabs">
+    <button [class.active]="tab() === 'elder'" (click)="setTab('elder')">
+      Elder Futhark
+    </button>
+    <button [class.active]="tab() === 'younger'" (click)="setTab('younger')">
+      Younger Futhark
+    </button>
+    <button [class.active]="tab() === 'anglo'" (click)="setTab('anglo')">
+      Anglo-Saxon Futhorc
+    </button>
+  </div>
+
+  <div class="runes-tab-content">
+    @if (tab() === 'elder') {
+    <div class="tab-panel">Elder Futhark content coming soon...</div>
+    } @if (tab() === 'younger') {
+    <div class="tab-panel">Younger Futhark content coming soon...</div>
+    } @if (tab() === 'anglo') {
+    <div class="tab-panel">Anglo-Saxon Futhorc content coming soon...</div>
+    }
+  </div>
+</div>
