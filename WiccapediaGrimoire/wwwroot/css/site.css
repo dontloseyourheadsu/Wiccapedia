@@ -1,31 +1,150 @@
-html {
-  font-size: 14px;
+/*
+	WiccapediaGrimoire Theme
+	Palette:
+	- Background: #1A1A1A
+	- Primary   : #EBD6F5
+	- Secondary : #AD5CD6
+	- Tertiary  : #5C1F7A
+*/
+
+:root {
+	--bg: #1a1a1a;
+	--primary: #ebd6f5;
+	--secondary: #ad5cd6;
+	--tertiary: #5c1f7a;
+	--surface-1: #1f1f1f;
+	--surface-2: #242424;
+	--border: rgba(235, 214, 245, 0.15);
+	--muted: #c8b3d2;
+	--link: #ad5cd6;
+	--link-hover: #c57ef0;
+	--shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+html, body {
+	height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+	background-color: var(--bg);
+	color: var(--primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* Container rhythm */
+.container, .container-fluid {
+	color: var(--primary);
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* Links */
+a { color: var(--link); }
+a:hover, a:focus { color: var(--link-hover); }
+
+/* Buttons */
+.btn-primary {
+	--bs-btn-bg: var(--secondary);
+	--bs-btn-border-color: var(--secondary);
+	--bs-btn-hover-bg: var(--tertiary);
+	--bs-btn-hover-border-color: var(--tertiary);
+	--bs-btn-color: #fff;
 }
+
+.btn-outline-primary {
+	--bs-btn-color: var(--primary);
+	--bs-btn-border-color: var(--secondary);
+	--bs-btn-hover-bg: var(--secondary);
+	--bs-btn-hover-border-color: var(--secondary);
+	--bs-btn-hover-color: #fff;
+}
+
+/* Navbar */
+.app-navbar {
+	background: linear-gradient(90deg, var(--tertiary), var(--secondary));
+	border-bottom: 1px solid var(--border);
+}
+.app-navbar .navbar-brand,
+.app-navbar .nav-link {
+	color: #fff !important;
+}
+.app-navbar .nav-link.active,
+.app-navbar .nav-link:focus,
+.app-navbar .nav-link:hover {
+	color: var(--primary) !important;
+}
+.navbar-toggler {
+	border-color: rgba(255,255,255,.25);
+}
+.navbar-toggler-icon {
+	filter: invert(1) grayscale(100%);
+}
+
+/* Footer */
+.app-footer {
+	background: var(--surface-1);
+	border-top: 1px solid var(--border);
+	color: var(--muted);
+}
+.app-footer a { color: var(--link); }
+.app-footer a:hover { color: var(--link-hover); }
+
+/* Cards & panels */
+.card {
+	background-color: var(--surface-1);
+	color: var(--primary);
+	border-color: var(--border);
+	box-shadow: var(--shadow);
+}
+
+.card-header { border-bottom-color: var(--border); }
+
+/* Forms */
+input.form-control, textarea.form-control, select.form-select {
+	background-color: var(--surface-2);
+	color: var(--primary);
+	border-color: var(--border);
+}
+input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
+	background-color: var(--surface-2);
+	color: var(--primary);
+	border-color: var(--secondary);
+	box-shadow: 0 0 0 .25rem rgba(173, 92, 214, .25);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+	color: var(--primary);
+}
+.lead { color: var(--muted); }
+
+/* Palette demo */
+.palette {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 1rem;
+}
+.swatch {
+	border-radius: .75rem;
+	overflow: hidden;
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow);
+}
+.swatch-color {
+	height: 84px;
+}
+.swatch-label {
+	padding: .5rem .75rem;
+	background: var(--surface-1);
+	color: var(--muted);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+/* Utility */
+.surface {
+	background: var(--surface-1);
+	border: 1px solid var(--border);
+	border-radius: .75rem;
+	padding: 2rem;
+	box-shadow: var(--shadow);
+}
+
