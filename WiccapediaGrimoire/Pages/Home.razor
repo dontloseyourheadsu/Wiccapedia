@@ -1,0 +1,40 @@
+﻿@using Blazor.Extensions
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.Canvas2D
+@page "/"
+
+<PageTitle>Cover</PageTitle>
+
+<div class="alert alert-warning" role="alert">
+    Before authentication will function correctly, you must configure your provider details in <code>Program.cs</code>
+    <br />
+    This cover animation runs purely in C# using Blazor and Canvas2D, no JavaScript.
+</div>
+
+@if (!displayEnergy)
+{
+    <button class="btn btn-primary" @onclick="ToggleEnergyDisplay">Reveal Hidden Energy</button>
+}
+else
+{
+    <div class="position-relative">
+        <!-- Full-screen-ish canvas area; using fixed size to avoid JS measurements -->
+        <div style="position:absolute;inset:0;z-index:2;">
+        </div>
+        <BECanvas Width="1200" Height="800" @ref="_canvasReference"></BECanvas>
+    </div>
+}
+
+<h1>Hidden</h1>
+
+@code {
+    private bool displayEnergy = false;
+    private BECanvas? _canvasReference;
+    private Canvas2DContext? _context;
+
+    private void ToggleEnergyDisplay()
+    {
+        displayEnergy = !displayEnergy;
+        StateHasChanged();
+    }
+}
