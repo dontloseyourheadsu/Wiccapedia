@@ -7,11 +7,12 @@ export function startLottieAnimation(container, animationPath) {
     console.error("Lottie library is not loaded.");
     return;
   }
-  lottie.loadAnimation({
+  const anim = lottie.loadAnimation({
     container: container,
     renderer: "svg",
-    loop: true,
+    loop: false,
     autoplay: true,
     path: animationPath,
   });
+  anim.setSpeed(0.5);
 }
