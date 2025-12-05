@@ -22,16 +22,16 @@ public class DecorationsController : ControllerBase
     {
         var modelType = (WiccapediaApp.Models.Decorations.DecorationType)(int)request.Type;
 
-        var decoration = new Decoration 
-        { 
+        var decoration = new Decoration
+        {
             Type = modelType,
             Value = request.Value
         };
         _context.Decorations.Add(decoration);
         await _context.SaveChangesAsync();
-        
+
         var responseType = (WiccapediaContracts.Decorations.DecorationType)(int)decoration.Type;
-        
+
         return CreatedAtAction(nameof(GetDecoration), new { id = decoration.Id }, new DecorationResponse(decoration.Id, responseType, decoration.Value));
     }
 
@@ -40,7 +40,7 @@ public class DecorationsController : ControllerBase
     {
         var decoration = await _context.Decorations.FindAsync(id);
         if (decoration == null) return NotFound();
-        
+
         var responseType = (WiccapediaContracts.Decorations.DecorationType)(int)decoration.Type;
         return new DecorationResponse(decoration.Id, responseType, decoration.Value);
     }

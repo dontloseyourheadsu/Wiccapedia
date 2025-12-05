@@ -20,8 +20,8 @@ public class CoversController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CoverResponse>> CreateCover(CreateCoverRequest request)
     {
-        var cover = new Cover 
-        { 
+        var cover = new Cover
+        {
             Title = request.Title,
             DecorationId = request.DecorationId
         };

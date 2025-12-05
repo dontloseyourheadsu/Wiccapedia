@@ -20,8 +20,8 @@ public class NotebooksController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<NotebookResponse>> CreateNotebook(CreateNotebookRequest request)
     {
-        var notebook = new Notebook 
-        { 
+        var notebook = new Notebook
+        {
             UserId = request.UserId,
             CoverId = request.CoverId
         };
