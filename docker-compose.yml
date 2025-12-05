@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: wiccapedia-postgres
+    environment:
+      POSTGRES_DB: WiccapediaDb
+      POSTGRES_USER: wicca_admin
+      POSTGRES_PASSWORD: abc123=0
+    ports:
+      - "5432:5432"
+    volumes:
+      - wiccapedia_db_data:/var/lib/postgresql/data
+
+volumes:
+  wiccapedia_db_data:
