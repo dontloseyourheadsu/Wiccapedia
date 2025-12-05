@@ -1,3 +1,15 @@
 {
-  "dotnet.defaultSolution": "WiccapediaGrimoire.sln"
+  "dotnet.defaultSolution": "WiccapediaGrimoire.sln",
+  "sqltools.connections": [
+    {
+      "ssh": "Disabled",
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "Wiccapedia",
+      "database": "Wiccapedia",
+      "username": "wicca_admin"
+    }
+  ]
 }
