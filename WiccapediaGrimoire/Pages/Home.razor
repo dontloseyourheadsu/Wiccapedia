@@ -1,6 +1,7 @@
 ﻿@page "/"
 @implements IAsyncDisposable
 @inject IJSRuntime JS
+@inject WiccapediaGrimoire.Services.Covers.CoversService CoversService
 
 <PageTitle>Cover</PageTitle>
 
@@ -31,8 +32,12 @@
             // Import the collocated JS module
             module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
 
-            // Load and play Lottie animation using the exported function
-            await module.InvokeVoidAsync("startLottieAnimation", animationContainer, "lottie/lottie-sample.json");
+            var defaultCover = await CoversService.GetDefaultCoverAsync();
+            if (defaultCover != null)
+            {
+                // Load and play Lottie animation using the exported function
+                await module.InvokeVoidAsync("startLottieAnimation", animationContainer, defaultCover.LottieData);
+            }
         }
     }
 
