@@ -6,13 +6,17 @@ namespace WiccapediaGrimoire.Services.Covers;
 public class CoversService
 {
     private readonly HttpClient _httpClient;
-    public CoversService(HttpClient httpClient)
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public CoversService(HttpClient httpClient, IHttpClientFactory httpClientFactory)
     {
         _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<DefaultCoverResponse?> GetDefaultCoverAsync()
     {
-        return await _httpClient.GetFromJsonAsync<DefaultCoverResponse>("api/Covers/default");
+        var client = _httpClientFactory.CreateClient("WiccapediaApi.Public");
+        return await client.GetFromJsonAsync<DefaultCoverResponse>("api/Covers/default");
     }
 }
