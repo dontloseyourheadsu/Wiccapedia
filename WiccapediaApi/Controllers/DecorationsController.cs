@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WiccapediaApi.Data;
 using WiccapediaApp.Models.Decorations;
@@ -8,6 +9,7 @@ namespace WiccapediaApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class DecorationsController : ControllerBase
 {
     private readonly WiccapediaDbContext _context;
@@ -20,7 +22,7 @@ public class DecorationsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<DecorationResponse>> CreateDecoration(CreateDecorationRequest request)
     {
-        var modelType = (WiccapediaApp.Models.Decorations.DecorationType)(int)request.Type;
+        var modelType = (DecorationType)(int)request.Type;
 
         var decoration = new Decoration
         {

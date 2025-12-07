@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WiccapediaApi.Data;
 using WiccapediaApp.Models.Covers;
@@ -8,6 +9,7 @@ namespace WiccapediaApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CoversController : ControllerBase
 {
     private readonly WiccapediaDbContext _context;
