@@ -6,7 +6,6 @@ namespace WiccapediaGrimoire.Services.Covers;
 public class CoversService
 {
     private readonly HttpClient _httpClient;
-
     public CoversService(HttpClient httpClient)
     {
         _httpClient = httpClient;
