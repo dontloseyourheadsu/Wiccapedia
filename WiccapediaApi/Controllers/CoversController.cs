@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WiccapediaApi.Data;
 using WiccapediaApp.Models.Covers;
@@ -8,6 +9,7 @@ namespace WiccapediaApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CoversController : ControllerBase
 {
     private readonly WiccapediaDbContext _context;
@@ -36,5 +38,18 @@ public class CoversController : ControllerBase
         var cover = await _context.Covers.FindAsync(id);
         if (cover == null) return NotFound();
         return new CoverResponse(cover.Id, cover.Title, cover.DecorationId);
+    }
+
+    [HttpGet("default")]
+    public async Task<ActionResult<DefaultCoverResponse>> GetDefault()
+    {
+        var path = Path.Combine(Directory.GetCurrentDirectory(), "lottie", "lottie-sample.json");
+        if (!System.IO.File.Exists(path))
+        {
+            return NotFound("Default lottie file not found.");
+        }
+
+        var json = await System.IO.File.ReadAllTextAsync(path);
+        return new DefaultCoverResponse("Default Cover", json);
     }
 }
