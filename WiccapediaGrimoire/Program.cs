@@ -14,6 +14,11 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<CustomAuthorizationMessageHandler>();
 
 // 2. Register the Service AND the Client together
+builder.Services.AddHttpClient("WiccapediaApi.Public", client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["WiccapediaApi:BaseUrl"]!);
+    });
+
 builder.Services.AddHttpClient<CoversService>(client =>
     {
         client.BaseAddress = new Uri(builder.Configuration["WiccapediaApi:BaseUrl"]!);
