@@ -41,6 +41,7 @@ public class CoversController : ControllerBase
     }
 
     [HttpGet("default")]
+    [AllowAnonymous]
     public async Task<ActionResult<DefaultCoverResponse>> GetDefault()
     {
         var path = Path.Combine(Directory.GetCurrentDirectory(), "lottie", "lottie-sample.json");
