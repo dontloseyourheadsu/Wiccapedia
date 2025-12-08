@@ -1,0 +1,50 @@
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.auth-card {
+    background-color: var(--surface-1);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border);
+}
+
+h2 {
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.btn-google {
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.btn-google:hover {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.btn-password {
+    background-color: var(--secondary);
+    color: white;
+    border: none;
+}
+
+.btn-password:hover {
+    background-color: var(--link-hover);
+    color: white;
+}
