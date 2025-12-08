@@ -1,0 +1,38 @@
+@page "/login"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+
+<PageTitle>Login</PageTitle>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Welcome Back</h2>
+        <p>Choose your login method</p>
+
+        <div class="d-grid gap-3">
+            <button class="btn btn-google" @onclick="LoginWithGoogle">
+                <i class="bi bi-google me-2"></i> Sign in with Google
+            </button>
+
+            <button class="btn btn-password" @onclick="NavigateToSignIn">
+                <i class="bi bi-envelope me-2"></i> Sign in with Password
+            </button>
+        </div>
+
+        <div class="mt-4 text-center">
+            <p>Don't have an account? <a href="signup">Sign up</a></p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void LoginWithGoogle()
+    {
+        Navigation.NavigateToLogin("authentication/login");
+    }
+
+    private void NavigateToSignIn()
+    {
+        Navigation.NavigateTo("signin");
+    }
+}
