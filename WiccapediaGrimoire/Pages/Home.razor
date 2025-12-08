@@ -1,4 +1,5 @@
 ﻿@page "/"
+@attribute [Authorize]
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject WiccapediaGrimoire.Services.Covers.CoversService CoversService
