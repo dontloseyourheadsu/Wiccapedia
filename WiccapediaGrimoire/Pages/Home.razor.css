@@ -1,0 +1,132 @@
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+.subtle {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.dashboard-controls {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.control-input,
+.control-select,
+.create-button {
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 10px;
+    min-height: 2.3rem;
+    padding: 0.4rem 0.7rem;
+}
+
+.control-input {
+    min-width: 220px;
+}
+
+.create-button {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+}
+
+.notebooks-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+}
+
+.notebook-card {
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--surface-1);
+    display: flex;
+    flex-direction: column;
+    min-height: 250px;
+    cursor: pointer;
+    position: relative;
+}
+
+.card-preview {
+    min-height: 140px;
+    background: linear-gradient(180deg, rgba(167, 118, 255, 0.2), rgba(22, 22, 28, 0.4));
+}
+
+.card-preview ::deep .lottie-host {
+    min-height: 140px;
+}
+
+.card-content {
+    padding: 0.75rem;
+}
+
+.card-content h2 {
+    font-size: 1rem;
+    margin: 0 0 0.35rem;
+}
+
+.card-actions {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+}
+
+.card-actions summary {
+    list-style: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(19, 19, 24, 0.6);
+    border: 1px solid var(--border-color);
+}
+
+.card-actions summary::-webkit-details-marker {
+    display: none;
+}
+
+.card-actions-menu {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-3);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 0.3rem;
+    overflow: hidden;
+}
+
+.card-actions-menu button {
+    background: transparent;
+    border: 0;
+    color: var(--text-primary);
+    text-align: left;
+    padding: 0.45rem 0.8rem;
+}
+
+.card-actions-menu button:hover {
+    background: var(--surface-2);
+}
+
+.error-banner {
+    border: 1px solid rgba(255, 109, 109, 0.5);
+    border-radius: 10px;
+    background: rgba(90, 24, 24, 0.35);
+    color: #ff9f9f;
+    padding: 0.75rem;
+}

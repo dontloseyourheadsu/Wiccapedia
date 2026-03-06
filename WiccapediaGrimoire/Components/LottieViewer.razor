@@ -1,0 +1,41 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="lottie-host" @ref="container"></div>
+
+@code {
+    [Parameter] public string? AnimationData { get; set; }
+
+    private ElementReference container;
+    private IJSObjectReference? module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/lottieInterop.js");
+            await RenderAsync();
+            return;
+        }
+
+        await RenderAsync();
+    }
+
+    private async Task RenderAsync()
+    {
+        if (module is null)
+        {
+            return;
+        }
+
+        await module.InvokeVoidAsync("renderLottie", container, AnimationData);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+}

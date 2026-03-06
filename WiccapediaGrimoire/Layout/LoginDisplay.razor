@@ -3,13 +3,32 @@
 
 <AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity?.Name!
-        <button class="nav-link btn btn-link" @onclick="BeginLogOut">Log out</button>
+        <span class="header-user">@context.User.Identity?.Name</span>
+        <button class="header-logout" @onclick="BeginLogOut">Log out</button>
     </Authorized>
     <NotAuthorized>
-        <a href="login">Log in</a>
+        <a class="header-login" href="login">Log in</a>
     </NotAuthorized>
 </AuthorizeView>
+
+<style>
+    .header-user {
+        color: var(--text-muted);
+        margin-right: 0.7rem;
+        font-size: 0.9rem;
+    }
+
+    .header-logout,
+    .header-login {
+        background: var(--surface-2);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        text-decoration: none;
+        padding: 0.32rem 0.65rem;
+        font-size: 0.88rem;
+    }
+</style>
 
 @code {
     public void BeginLogOut()

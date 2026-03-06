@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WiccapediaGrimoire;
-using WiccapediaGrimoire.Services.Covers;
+using WiccapediaGrimoire.Services.Notebooks;
 using WiccapediaGrimoire.Utils.Authorization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -19,7 +19,7 @@ builder.Services.AddHttpClient("WiccapediaApi.Public", client =>
         client.BaseAddress = new Uri(builder.Configuration["WiccapediaApi:BaseUrl"]!);
     });
 
-builder.Services.AddHttpClient<CoversService>(client =>
+builder.Services.AddHttpClient<NotebooksService>(client =>
     {
         client.BaseAddress = new Uri(builder.Configuration["WiccapediaApi:BaseUrl"]!);
     })

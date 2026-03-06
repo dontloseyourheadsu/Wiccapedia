@@ -1,52 +1,141 @@
 ﻿@page "/"
 @attribute [Authorize]
-@implements IAsyncDisposable
+@inject WiccapediaGrimoire.Services.Notebooks.NotebooksService NotebooksService
+@inject NavigationManager Navigation
 @inject IJSRuntime JS
-@inject WiccapediaGrimoire.Services.Covers.CoversService CoversService
 
-<PageTitle>Cover</PageTitle>
+<PageTitle>My Notebooks</PageTitle>
 
-<div class="alert alert-warning" role="alert">
-    Before authentication will function correctly, you must configure your provider details in <code>Program.cs</code>
-    <br />
-    This cover animation runs purely in C# using Blazor and Canvas2D, no JavaScript.
-</div>
-
-<div class="position-relative">
-    <!-- Full-screen-ish canvas area; using fixed size to avoid JS measurements -->
-    <div style="position:absolute;inset:0;z-index:2;">
+<section class="dashboard-header">
+    <div>
+        <h1>My Notebooks</h1>
+        <p class="subtle">Create, search, and open your notebooks.</p>
     </div>
-    <div @ref="animationContainer" class="animation-container"></div>
-</div>
 
+    <div class="dashboard-controls">
+        <input class="control-input" placeholder="Search notebooks" value="@search" @oninput="OnSearchChanged" />
 
-<h1>Hidden</h1>
+        <select class="control-select" value="@sortBy" @onchange="OnSortChanged">
+            <option value="updated">Last update</option>
+            <option value="name">Name</option>
+        </select>
+
+        <select class="control-select" value="@direction" @onchange="OnDirectionChanged">
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+        </select>
+
+        <button class="create-button" @onclick="CreateNotebookAsync">Create</button>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="subtle">Loading notebooks...</p>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="error-banner">@errorMessage</div>
+}
+else
+{
+    <section class="notebooks-grid">
+        @foreach (var notebook in notebooks)
+        {
+            <article class="notebook-card" @onclick="() => OpenNotebook(notebook.Id)">
+                <div class="card-preview">
+                    <LottieViewer AnimationData="@notebook.CoverLottieData" />
+                </div>
+
+                <div class="card-content">
+                    <h2>@notebook.Title</h2>
+                    <p class="subtle">Updated @notebook.UpdatedAtUtc.LocalDateTime:g</p>
+                </div>
+
+                <details class="card-actions" @onclick:stopPropagation="true">
+                    <summary>⋯</summary>
+                    <div class="card-actions-menu">
+                        <button @onclick="() => OpenNotebook(notebook.Id)">Edit</button>
+                        <button @onclick="() => DeleteNotebookAsync(notebook.Id)">Delete</button>
+                    </div>
+                </details>
+            </article>
+        }
+    </section>
+}
 
 @code {
-    private ElementReference animationContainer;
-    private IJSObjectReference? module;
+    private IReadOnlyList<WiccapediaContracts.Notebooks.Responses.NotebookListItemResponse> notebooks = [];
+    private bool isLoading = true;
+    private string search = string.Empty;
+    private string sortBy = "updated";
+    private string direction = "desc";
+    private string? errorMessage;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            // Import the collocated JS module
-            module = await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
+        await LoadNotebooksAsync();
+    }
 
-            var defaultCover = await CoversService.GetDefaultCoverAsync();
-            if (defaultCover != null)
-            {
-                // Load and play Lottie animation using the exported function
-                await module.InvokeVoidAsync("startLottieAnimation", animationContainer, defaultCover.LottieData);
-            }
+    private async Task LoadNotebooksAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await NotebooksService.GetMyNotebooksAsync(search, sortBy, direction);
+            notebooks = response?.Notebooks ?? [];
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs eventArgs)
+    {
+        search = eventArgs.Value?.ToString() ?? string.Empty;
+        await LoadNotebooksAsync();
+    }
+
+    private async Task OnSortChanged(ChangeEventArgs eventArgs)
+    {
+        sortBy = eventArgs.Value?.ToString() ?? "updated";
+        await LoadNotebooksAsync();
+    }
+
+    private async Task OnDirectionChanged(ChangeEventArgs eventArgs)
+    {
+        direction = eventArgs.Value?.ToString() ?? "desc";
+        await LoadNotebooksAsync();
+    }
+
+    private async Task CreateNotebookAsync()
+    {
+        var notebook = await NotebooksService.CreateNotebookAsync("New Notebook");
+        if (notebook is not null)
+        {
+            OpenNotebook(notebook.Id);
         }
     }
 
-    async ValueTask IAsyncDisposable.DisposeAsync()
+    private async Task DeleteNotebookAsync(int notebookId)
     {
-        if (module is not null)
+        var shouldDelete = await JS.InvokeAsync<bool>("confirm", "Delete this notebook?");
+        if (!shouldDelete)
         {
-            await module.DisposeAsync();
+            return;
         }
+
+        await NotebooksService.DeleteNotebookAsync(notebookId);
+        await LoadNotebooksAsync();
+    }
+
+    private void OpenNotebook(int notebookId)
+    {
+        Navigation.NavigateTo($"/notebooks/{notebookId}");
     }
 }

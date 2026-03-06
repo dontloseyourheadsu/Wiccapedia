@@ -1,0 +1,303 @@
+@page "/notebooks/{NotebookId:int}"
+@attribute [Authorize]
+@inject WiccapediaGrimoire.Services.Notebooks.NotebooksService NotebooksService
+@inject NavigationManager Navigation
+
+<PageTitle>Notebook Editor</PageTitle>
+
+@if (isLoading)
+{
+    <p class="subtle">Loading notebook...</p>
+}
+else if (notebook is null)
+{
+    <div class="error-banner">Notebook not found.</div>
+}
+else
+{
+    <section class="editor-top-bar">
+        <button class="secondary-button" @onclick="GoBack">Back</button>
+
+        <div class="title-row">
+            <input class="title-input" value="@titleDraft" @oninput="OnTitleChanged" />
+            <button class="secondary-button" @onclick="SaveTitleAsync">Save title</button>
+        </div>
+
+        <div class="mode-toggle">
+            <button class="@(editorMode == EditorMode.Code ? "active" : null)"
+                    @onclick="() => SetMode(EditorMode.Code)">Code</button>
+            <button class="@(editorMode == EditorMode.DragDrop ? "active" : null)"
+                    @onclick="() => SetMode(EditorMode.DragDrop)">Drag &amp; Drop</button>
+        </div>
+    </section>
+
+    <section class="page-controls">
+        <button class="secondary-button" disabled="@(CurrentPage?.PreviousPageId is null)"
+                @onclick="GoToPreviousPage">Prev</button>
+        <button class="secondary-button" disabled="@(CurrentPage?.NextPageId is null)" @onclick="GoToNextPage">Next</button>
+        <button class="secondary-button" @onclick="CreatePageAsync">Create page</button>
+        <button class="secondary-button" disabled="@(notebook.Pages.Count <= 1)" @onclick="DeleteCurrentPageAsync">Delete
+            page</button>
+            <span class="subtle">@CurrentPageLabel</span>
+        </section>
+
+        @if (editorMode == EditorMode.DragDrop)
+        {
+            <section class="dragdrop-placeholder">Drag and drop mode will come soon.</section>
+        }
+        else
+        {
+            <section class="editor-body">
+                <div class="code-pane">
+                    <div class="code-toolbar">
+                        <span class="subtle">Custom syntax: \{lottie:cover\} and \\ to escape a backslash.</span>
+                        <button class="secondary-button" @onclick="SavePageAsync">Save page</button>
+                    </div>
+
+                    <textarea class="code-editor" value="@editorText" @oninput="OnEditorInput"></textarea>
+
+                    <div class="syntax-console">
+                        <h3>Syntax Console</h3>
+                        @if (diagnostics.Count == 0)
+                        {
+                            <p class="ok-message">No syntax issues found.</p>
+                        }
+                        else
+                        {
+                            <ul>
+                                @foreach (var message in diagnostics)
+                                {
+                                    <li>@message</li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <div class="preview-pane">
+                    @foreach (var segment in parseResult.Segments)
+                    {
+                        if (segment.Type == WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupSegmentType.Markdown)
+                        {
+                            <div class="markdown-segment">@((MarkupString)segment.Html)</div>
+                        }
+                        else
+                        {
+                            var lottieData = ResolveLottieData(segment.Value);
+                            if (lottieData is null)
+                            {
+                                <div class="warning-chip">Unknown lottie source '@segment.Value'.</div>
+                            }
+                            else
+                            {
+                                <div class="lottie-segment">
+                                    <LottieViewer AnimationData="@lottieData" />
+                                </div>
+                            }
+                        }
+                    }
+                </div>
+            </section>
+        }
+    }
+
+@code {
+    [Parameter] public int NotebookId { get; set; }
+
+    private WiccapediaContracts.Notebooks.Responses.NotebookDetailsResponse? notebook;
+    private WiccapediaContracts.Notebooks.Responses.NotebookPageResponse? CurrentPage =>
+        notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId);
+
+    private string titleDraft = string.Empty;
+    private string editorText = string.Empty;
+    private int currentPageId;
+    private bool isLoading = true;
+    private EditorMode editorMode = EditorMode.Code;
+    private WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupParseResult parseResult =
+        new([], []);
+    private List<string> diagnostics = [];
+
+    private string CurrentPageLabel =>
+        CurrentPage is null
+            ? string.Empty
+            : CurrentPage.IsCover
+                ? "Cover"
+                : $"Page {notebook?.Pages.ToList().FindIndex(p => p.Id == CurrentPage.Id) + 1}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotebookAsync();
+    }
+
+    private async Task LoadNotebookAsync()
+    {
+        isLoading = true;
+        notebook = await NotebooksService.GetNotebookAsync(NotebookId);
+
+        if (notebook is not null)
+        {
+            titleDraft = notebook.Title;
+            currentPageId = notebook.Pages.FirstOrDefault(p => p.IsCover)?.Id
+                ?? notebook.Pages.First().Id;
+            editorText = CurrentPage?.Markdown ?? string.Empty;
+            EvaluateSyntax();
+        }
+
+        isLoading = false;
+    }
+
+    private async Task SaveTitleAsync()
+    {
+        if (notebook is null)
+        {
+            return;
+        }
+
+        var updated = await NotebooksService.UpdateNotebookTitleAsync(notebook.Id, titleDraft);
+        if (updated is not null)
+        {
+            notebook = notebook with { Title = updated.Title, UpdatedAtUtc = updated.UpdatedAtUtc };
+        }
+    }
+
+    private async Task SavePageAsync()
+    {
+        if (notebook is null || CurrentPage is null)
+        {
+            return;
+        }
+
+        var updatedPage = await NotebooksService.UpdatePageAsync(notebook.Id, CurrentPage.Id, editorText);
+        if (updatedPage is not null)
+        {
+            notebook = notebook with
+            {
+                Pages = notebook.Pages.Select(page => page.Id == updatedPage.Id ? updatedPage : page).ToList(),
+                UpdatedAtUtc = updatedPage.UpdatedAtUtc
+            };
+            currentPageId = updatedPage.Id;
+        }
+
+        EvaluateSyntax();
+    }
+
+    private async Task CreatePageAsync()
+    {
+        if (notebook is null || CurrentPage is null)
+        {
+            return;
+        }
+
+        var createdPage = await NotebooksService.CreateNextPageAsync(notebook.Id, CurrentPage.Id);
+        if (createdPage is null)
+        {
+            return;
+        }
+
+        await LoadNotebookAsync();
+        currentPageId = createdPage.Id;
+        editorText = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.Markdown ?? string.Empty;
+        EvaluateSyntax();
+    }
+
+    private async Task DeleteCurrentPageAsync()
+    {
+        if (notebook is null || CurrentPage is null)
+        {
+            return;
+        }
+
+        var preferredPageId = CurrentPage.NextPageId ?? CurrentPage.PreviousPageId;
+        var details = await NotebooksService.DeletePageAsync(notebook.Id, CurrentPage.Id);
+        if (details is null)
+        {
+            return;
+        }
+
+        notebook = details;
+        currentPageId = details.Pages.FirstOrDefault(p => p.Id == preferredPageId)?.Id
+            ?? details.Pages.First().Id;
+        editorText = details.Pages.First(p => p.Id == currentPageId).Markdown;
+        EvaluateSyntax();
+    }
+
+    private void GoToPreviousPage()
+    {
+        if (CurrentPage?.PreviousPageId is null)
+        {
+            return;
+        }
+
+        currentPageId = CurrentPage.PreviousPageId.Value;
+        editorText = CurrentPage?.Markdown ?? string.Empty;
+        EvaluateSyntax();
+    }
+
+    private void GoToNextPage()
+    {
+        if (CurrentPage?.NextPageId is null)
+        {
+            return;
+        }
+
+        currentPageId = CurrentPage.NextPageId.Value;
+        editorText = CurrentPage?.Markdown ?? string.Empty;
+        EvaluateSyntax();
+    }
+
+    private void OnEditorInput(ChangeEventArgs eventArgs)
+    {
+        editorText = eventArgs.Value?.ToString() ?? string.Empty;
+        EvaluateSyntax();
+    }
+
+    private void OnTitleChanged(ChangeEventArgs eventArgs)
+    {
+        titleDraft = eventArgs.Value?.ToString() ?? string.Empty;
+    }
+
+    private void SetMode(EditorMode mode)
+    {
+        editorMode = mode;
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private void EvaluateSyntax()
+    {
+        parseResult = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupParser.Parse(editorText);
+        diagnostics = parseResult.Diagnostics.ToList();
+
+        foreach (var segment in parseResult.Segments.Where(s => s.Type ==
+WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupSegmentType.Lottie))
+        {
+            if (ResolveLottieData(segment.Value) is null)
+            {
+                diagnostics.Add($"Unknown lottie source '{segment.Value}'. Available source: cover.");
+            }
+        }
+    }
+
+    private string? ResolveLottieData(string source)
+    {
+        if (notebook is null)
+        {
+            return null;
+        }
+
+        return source.Trim().ToLowerInvariant() switch
+        {
+            "cover" => notebook.CoverLottieData,
+            _ => null
+        };
+    }
+
+    private enum EditorMode
+    {
+        Code,
+        DragDrop
+    }
+}
