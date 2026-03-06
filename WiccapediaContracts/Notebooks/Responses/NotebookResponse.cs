@@ -1,3 +1,3 @@
 namespace WiccapediaContracts.Notebooks.Responses;
 
-public record NotebookResponse(int Id, int UserId, int CoverId);
+public record NotebookResponse(int Id, string Title, DateTimeOffset UpdatedAtUtc, DateTimeOffset CreatedAtUtc);
