@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WiccapediaApp.Models.Users;
 using WiccapediaApp.Models.Notebooks;
-using WiccapediaApp.Models.Covers;
-using WiccapediaApp.Models.Decorations;
 
 namespace WiccapediaApi.Data;
 
@@ -14,12 +12,15 @@ public class WiccapediaDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Notebook> Notebooks { get; set; }
-    public DbSet<Cover> Covers { get; set; }
-    public DbSet<Decoration> Decorations { get; set; }
+    public DbSet<NotebookPage> NotebookPages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.ExternalId)
+            .IsUnique();
 
         modelBuilder.Entity<User>()
             .HasMany(u => u.Notebooks)
@@ -27,13 +28,26 @@ public class WiccapediaDbContext : DbContext
             .HasForeignKey(n => n.UserId);
 
         modelBuilder.Entity<Notebook>()
-            .HasOne(n => n.Cover)
-            .WithOne(c => c.Notebook)
-            .HasForeignKey<Notebook>(n => n.CoverId);
+            .HasMany(n => n.Pages)
+            .WithOne(p => p.Notebook)
+            .HasForeignKey(p => p.NotebookId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Cover>()
-            .HasOne(c => c.Decoration)
-            .WithOne(d => d.Cover)
-            .HasForeignKey<Cover>(c => c.DecorationId);
+        modelBuilder.Entity<NotebookPage>()
+            .HasOne(p => p.PreviousPage)
+            .WithMany()
+            .HasForeignKey(p => p.PreviousPageId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<NotebookPage>()
+            .HasOne(p => p.NextPage)
+            .WithMany()
+            .HasForeignKey(p => p.NextPageId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<NotebookPage>()
+            .HasIndex(p => new { p.NotebookId, p.IsCover })
+            .HasFilter("\"IsCover\" = true")
+            .IsUnique();
     }
 }
