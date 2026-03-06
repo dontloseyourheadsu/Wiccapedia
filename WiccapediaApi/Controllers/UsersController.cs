@@ -22,7 +22,11 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<UserResponse>> CreateUser(CreateUserRequest request)
     {
-        var user = new User { Username = request.Username };
+        var user = new User
+        {
+            Username = request.Username,
+            ExternalId = Guid.NewGuid().ToString("N")
+        };
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetUser), new { id = user.Id }, new UserResponse(user.Id, user.Username));
