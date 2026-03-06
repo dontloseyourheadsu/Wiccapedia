@@ -21,6 +21,7 @@ else
         <div class="title-row">
             <input class="title-input" value="@titleDraft" @oninput="OnTitleChanged" />
             <button class="secondary-button" @onclick="SaveTitleAsync">Save title</button>
+            <button class="secondary-button" @onclick="SavePageAsync">Save page</button>
         </div>
 
         <div class="mode-toggle">
@@ -41,17 +42,12 @@ else
             <span class="subtle">@CurrentPageLabel</span>
         </section>
 
-        @if (editorMode == EditorMode.DragDrop)
-        {
-            <section class="dragdrop-placeholder">Drag and drop mode will come soon.</section>
-        }
-        else
-        {
-            <section class="editor-body">
+        <section class="editor-body">
+            @if (editorMode == EditorMode.Code)
+            {
                 <div class="code-pane">
                     <div class="code-toolbar">
                         <span class="subtle">Custom syntax: \{lottie:cover\} and \\ to escape a backslash.</span>
-                        <button class="secondary-button" @onclick="SavePageAsync">Save page</button>
                     </div>
 
                     <textarea class="code-editor" value="@editorText" @oninput="OnEditorInput"></textarea>
@@ -73,32 +69,123 @@ else
                         }
                     </div>
                 </div>
+            }
+            else
+            {
+                <div class="palette-pane">
+                    <div class="palette-header">
+                        <h3>Components</h3>
+                        <input class="palette-search" placeholder="Search groups or components" value="@componentSearch"
+                               @oninput="OnPaletteSearchChanged" />
+                    </div>
 
-                <div class="preview-pane">
-                    @foreach (var segment in parseResult.Segments)
-                    {
-                        if (segment.Type == WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupSegmentType.Markdown)
+                    <div class="palette-groups">
+                        @foreach (var group in FilteredPaletteGroups())
                         {
-                            <div class="markdown-segment">@((MarkupString)segment.Html)</div>
+                            <section class="palette-group">
+                                <button class="group-toggle" @onclick="() => ToggleGroup(group.Name)">
+                                    <span class="material-icons">@group.Icon</span>
+                                    <span>@group.Name</span>
+                                    <span class="material-icons">@(IsGroupExpanded(group.Name) ? "expand_less" : "expand_more")</span>
+                                </button>
+
+                                @if (IsGroupExpanded(group.Name))
+                                {
+                                    <div class="group-components">
+                                        @foreach (var component in FilteredGroupComponents(group))
+                                        {
+                                            <button class="component-button" draggable="true"
+                                                    @ondragstart="() => StartPaletteDrag(component.TypeKey)"
+                                                    @onclick="() => AddComponentByType(component.TypeKey)">
+                                                <span class="material-icons">@component.Icon</span>
+                                                <span>@component.Name</span>
+                                            </button>
+                                        }
+                                    </div>
+                                }
+                            </section>
                         }
-                        else
-                        {
-                            var lottieData = ResolveLottieData(segment.Value);
-                            if (lottieData is null)
-                            {
-                                <div class="warning-chip">Unknown lottie source '@segment.Value'.</div>
-                            }
-                            else
-                            {
-                                <div class="lottie-segment">
-                                    <LottieViewer AnimationData="@lottieData" />
-                                </div>
-                            }
-                        }
-                    }
+                    </div>
                 </div>
-            </section>
-        }
+            }
+
+            <div class="preview-pane" @ondragover="HandleDragOver" @ondragover:preventDefault="true" @ondrop="HandleDropToEnd"
+                 @ondrop:preventDefault="true">
+                <div class="preview-title-row">
+                    <h3>Editable Preview</h3>
+                    <span class="subtle">Edit content here in both modes</span>
+                </div>
+
+                @for (var index = 0; index < components.Count; index++)
+                {
+                    var component = components[index];
+                    <article class="component-card @(selectedComponentIndex == index ? "selected" : null)" draggable="true"
+                             @ondragstart="() => StartCanvasDrag(index)" @ondragover="HandleDragOver" @ondragover:preventDefault="true"
+                             @ondrop="() => HandleDropAt(index)" @ondrop:preventDefault="true"
+                             @onclick="() => selectedComponentIndex = index">
+                        <header class="component-header">
+                            <span class="component-title">
+                                <span class="material-icons">@GetComponentIcon(component.Type)</span>
+                                @GetComponentName(component.Type)
+                            </span>
+                            <button class="icon-button" @onclick="() => RemoveComponent(index)">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </header>
+
+                        @switch (component.Type)
+                        {
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Heading:
+                                <div class="field-row">
+                                    <select value="@component.Level" @onchange="(e) => OnHeadingLevelChanged(index, e)">
+                                        @for (var level = 1; level <= 6; level++)
+                                        {
+                                            <option value="@level">H@level</option>
+                                        }
+                                    </select>
+                                    <input value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
+                                           placeholder="Heading text" />
+                                </div>
+                                break;
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Paragraph:
+                                <textarea value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
+                                          placeholder="Paragraph text"></textarea>
+                                break;
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.List:
+                                <textarea value="@string.Join("\n", component.Items)" @oninput="(e) => OnListItemsChanged(index, e)"
+                                          placeholder="One item per line"></textarea>
+                                break;
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Table:
+                                <textarea value="@component.TableRaw" @oninput="(e) => OnTableChanged(index, e)"
+                                          placeholder="Markdown table"></textarea>
+                                break;
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Image:
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Gif:
+                                <div class="field-col">
+                                    <input value="@component.Url" @oninput="(e) => OnUrlChanged(index, e)" placeholder="https://..." />
+                                    <input value="@component.Alt" @oninput="(e) => OnAltChanged(index, e)" placeholder="Alt text" />
+                                </div>
+                                break;
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Link:
+                                <div class="field-col">
+                                    <input value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
+                                           placeholder="Link text" />
+                                    <input value="@component.Url" @oninput="(e) => OnUrlChanged(index, e)" placeholder="https://..." />
+                                </div>
+                                break;
+                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie:
+                                <input value="@component.LottieSource" @oninput="(e) => OnLottieSourceChanged(index, e)"
+                                       placeholder="cover" />
+                                break;
+                        }
+
+                        <div class="component-render">
+                            @RenderComponentPreview(component)
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
     }
 
 @code {
@@ -113,9 +200,35 @@ else
     private int currentPageId;
     private bool isLoading = true;
     private EditorMode editorMode = EditorMode.Code;
-    private WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupParseResult parseResult =
-        new([], []);
+    private WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupParseResult parseResult = new([], []);
     private List<string> diagnostics = [];
+    private List<WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel> components = [];
+    private string componentSearch = string.Empty;
+    private int? selectedComponentIndex;
+    private int? canvasDraggedIndex;
+    private string? paletteDraggedTypeKey;
+    private readonly HashSet<string> expandedGroups = ["Text", "Media", "Custom"];
+
+    private static readonly IReadOnlyList<WiccapediaGrimoire.Utils.NotebookMarkup.NotebookPaletteGroup> PaletteGroups =
+    [
+        new("Text", "text_fields",
+        [
+            new("Heading", "heading", "title"),
+            new("Paragraph", "paragraph", "subject"),
+            new("List", "list", "format_list_bulleted"),
+            new("Table", "table", "table_chart"),
+            new("Link", "link", "link")
+        ]),
+        new("Media", "perm_media",
+        [
+            new("Image", "image", "image"),
+            new("Gif", "gif", "gif_box")
+        ]),
+        new("Custom", "extension",
+        [
+            new("Lottie", "lottie", "animation")
+        ])
+    ];
 
     private string CurrentPageLabel =>
         CurrentPage is null
@@ -140,7 +253,7 @@ else
             currentPageId = notebook.Pages.FirstOrDefault(p => p.IsCover)?.Id
                 ?? notebook.Pages.First().Id;
             editorText = CurrentPage?.Markdown ?? string.Empty;
-            EvaluateSyntax();
+            RebuildFromEditorText();
         }
 
         isLoading = false;
@@ -197,7 +310,7 @@ else
         await LoadNotebookAsync();
         currentPageId = createdPage.Id;
         editorText = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.Markdown ?? string.Empty;
-        EvaluateSyntax();
+        RebuildFromEditorText();
     }
 
     private async Task DeleteCurrentPageAsync()
@@ -218,7 +331,7 @@ else
         currentPageId = details.Pages.FirstOrDefault(p => p.Id == preferredPageId)?.Id
             ?? details.Pages.First().Id;
         editorText = details.Pages.First(p => p.Id == currentPageId).Markdown;
-        EvaluateSyntax();
+        RebuildFromEditorText();
     }
 
     private void GoToPreviousPage()
@@ -230,7 +343,7 @@ else
 
         currentPageId = CurrentPage.PreviousPageId.Value;
         editorText = CurrentPage?.Markdown ?? string.Empty;
-        EvaluateSyntax();
+        RebuildFromEditorText();
     }
 
     private void GoToNextPage()
@@ -242,13 +355,13 @@ else
 
         currentPageId = CurrentPage.NextPageId.Value;
         editorText = CurrentPage?.Markdown ?? string.Empty;
-        EvaluateSyntax();
+        RebuildFromEditorText();
     }
 
     private void OnEditorInput(ChangeEventArgs eventArgs)
     {
         editorText = eventArgs.Value?.ToString() ?? string.Empty;
-        EvaluateSyntax();
+        RebuildFromEditorText();
     }
 
     private void OnTitleChanged(ChangeEventArgs eventArgs)
@@ -258,7 +371,282 @@ else
 
     private void SetMode(EditorMode mode)
     {
+        if (editorMode == mode)
+        {
+            return;
+        }
+
+        if (mode == EditorMode.DragDrop)
+        {
+            RebuildFromEditorText();
+        }
+        else
+        {
+            SyncEditorTextFromComponents();
+        }
+
         editorMode = mode;
+    }
+
+    private void OnPaletteSearchChanged(ChangeEventArgs eventArgs)
+    {
+        componentSearch = eventArgs.Value?.ToString() ?? string.Empty;
+    }
+
+    private IEnumerable<WiccapediaGrimoire.Utils.NotebookMarkup.NotebookPaletteGroup> FilteredPaletteGroups()
+    {
+        if (string.IsNullOrWhiteSpace(componentSearch))
+        {
+            return PaletteGroups;
+        }
+
+        return PaletteGroups.Where(group =>
+            group.Name.Contains(componentSearch, StringComparison.OrdinalIgnoreCase)
+            || group.Components.Any(component => component.Name.Contains(componentSearch, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private IEnumerable<WiccapediaGrimoire.Utils.NotebookMarkup.NotebookPaletteComponent> FilteredGroupComponents(
+        WiccapediaGrimoire.Utils.NotebookMarkup.NotebookPaletteGroup group)
+    {
+        if (string.IsNullOrWhiteSpace(componentSearch))
+        {
+            return group.Components;
+        }
+
+        return group.Components.Where(component =>
+            component.Name.Contains(componentSearch, StringComparison.OrdinalIgnoreCase)
+            || group.Name.Contains(componentSearch, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool IsGroupExpanded(string groupName) => expandedGroups.Contains(groupName);
+
+    private void ToggleGroup(string groupName)
+    {
+        if (!expandedGroups.Add(groupName))
+        {
+            expandedGroups.Remove(groupName);
+        }
+    }
+
+    private void AddComponentByType(string typeKey)
+    {
+        components.Add(CreateComponent(typeKey));
+        selectedComponentIndex = components.Count - 1;
+        SyncEditorTextFromComponents();
+    }
+
+    private void StartPaletteDrag(string typeKey)
+    {
+        paletteDraggedTypeKey = typeKey;
+        canvasDraggedIndex = null;
+    }
+
+    private void StartCanvasDrag(int index)
+    {
+        canvasDraggedIndex = index;
+        paletteDraggedTypeKey = null;
+    }
+
+    private void HandleDragOver(DragEventArgs _)
+    {
+    }
+
+    private void HandleDropToEnd(DragEventArgs _)
+    {
+        if (!string.IsNullOrWhiteSpace(paletteDraggedTypeKey))
+        {
+            AddComponentByType(paletteDraggedTypeKey);
+            paletteDraggedTypeKey = null;
+            return;
+        }
+
+        if (canvasDraggedIndex is int draggedIndex)
+        {
+            MoveComponent(draggedIndex, components.Count - 1);
+            canvasDraggedIndex = null;
+        }
+    }
+
+    private void HandleDropAt(int dropIndex)
+    {
+        if (!string.IsNullOrWhiteSpace(paletteDraggedTypeKey))
+        {
+            components.Insert(dropIndex, CreateComponent(paletteDraggedTypeKey));
+            paletteDraggedTypeKey = null;
+            SyncEditorTextFromComponents();
+            return;
+        }
+
+        if (canvasDraggedIndex is int draggedIndex)
+        {
+            MoveComponent(draggedIndex, dropIndex);
+            canvasDraggedIndex = null;
+        }
+    }
+
+    private void MoveComponent(int fromIndex, int toIndex)
+    {
+        if (fromIndex < 0 || fromIndex >= components.Count || toIndex < 0 || toIndex >= components.Count || fromIndex ==
+toIndex)
+        {
+            return;
+        }
+
+        var item = components[fromIndex];
+        components.RemoveAt(fromIndex);
+        components.Insert(toIndex, item);
+        selectedComponentIndex = toIndex;
+        SyncEditorTextFromComponents();
+    }
+
+    private void RemoveComponent(int index)
+    {
+        if (index < 0 || index >= components.Count)
+        {
+            return;
+        }
+
+        components.RemoveAt(index);
+        if (components.Count == 0)
+        {
+            components.Add(WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Paragraph(string.Empty));
+        }
+
+        selectedComponentIndex = Math.Clamp(index, 0, components.Count - 1);
+        SyncEditorTextFromComponents();
+    }
+
+    private void OnHeadingLevelChanged(int index, ChangeEventArgs eventArgs)
+    {
+        if (!int.TryParse(eventArgs.Value?.ToString(), out var level))
+        {
+            return;
+        }
+
+        ReplaceComponent(index, components[index] with { Level = Math.Clamp(level, 1, 6) });
+    }
+
+    private void OnComponentTextChanged(int index, ChangeEventArgs eventArgs)
+    {
+        ReplaceComponent(index, components[index] with { Text = eventArgs.Value?.ToString() ?? string.Empty });
+    }
+
+    private void OnListItemsChanged(int index, ChangeEventArgs eventArgs)
+    {
+        var items = (eventArgs.Value?.ToString() ?? string.Empty)
+            .Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+
+        ReplaceComponent(index, components[index] with { Items = items });
+    }
+
+    private void OnTableChanged(int index, ChangeEventArgs eventArgs)
+    {
+        ReplaceComponent(index, components[index] with { TableRaw = eventArgs.Value?.ToString() ?? string.Empty });
+    }
+
+    private void OnUrlChanged(int index, ChangeEventArgs eventArgs)
+    {
+        ReplaceComponent(index, components[index] with { Url = eventArgs.Value?.ToString() ?? string.Empty });
+    }
+
+    private void OnAltChanged(int index, ChangeEventArgs eventArgs)
+    {
+        ReplaceComponent(index, components[index] with { Alt = eventArgs.Value?.ToString() ?? string.Empty });
+    }
+
+    private void OnLottieSourceChanged(int index, ChangeEventArgs eventArgs)
+    {
+        ReplaceComponent(index, components[index] with { LottieSource = eventArgs.Value?.ToString() ?? string.Empty });
+    }
+
+    private void ReplaceComponent(int index, WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel updated)
+    {
+        components[index] = updated;
+        SyncEditorTextFromComponents();
+    }
+
+    private void RebuildFromEditorText()
+    {
+        components = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Parse(editorText).ToList();
+        selectedComponentIndex = components.Count > 0 ? 0 : null;
+        EvaluateSyntax();
+    }
+
+    private void SyncEditorTextFromComponents()
+    {
+        editorText = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Serialize(components);
+        EvaluateSyntax();
+    }
+
+    private RenderFragment RenderComponentPreview(WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel component)
+=> builder =>
+    {
+        if (component.Type == WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie)
+        {
+            var lottieData = ResolveLottieData(component.LottieSource);
+            if (lottieData is null)
+            {
+                builder.OpenElement(0, "div");
+                builder.AddAttribute(1, "class", "warning-chip");
+                builder.AddContent(2, $"Unknown lottie source '{component.LottieSource}'.");
+                builder.CloseElement();
+                return;
+            }
+
+            builder.OpenComponent<LottieViewer>(3);
+            builder.AddAttribute(4, nameof(LottieViewer.AnimationData), lottieData);
+            builder.CloseComponent();
+            return;
+        }
+
+        var markdown = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.ToMarkup(component);
+        var html = Markdig.Markdown.ToHtml(markdown);
+        builder.AddMarkupContent(5, html);
+    };
+
+    private string GetComponentName(WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType type)
+        => type switch
+        {
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Heading => "Heading",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Paragraph => "Paragraph",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.List => "List",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Table => "Table",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Image => "Image",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Gif => "Gif",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Link => "Link",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie => "Lottie",
+            _ => "Component"
+        };
+
+    private string GetComponentIcon(WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType type)
+        => type switch
+        {
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Heading => "title",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Paragraph => "subject",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.List => "format_list_bulleted",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Table => "table_chart",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Image => "image",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Gif => "gif_box",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Link => "link",
+            WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie => "animation",
+            _ => "widgets"
+        };
+
+    private WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel CreateComponent(string typeKey)
+    {
+        return typeKey.ToLowerInvariant() switch
+        {
+            "heading" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Heading("Heading", 2),
+            "paragraph" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Paragraph("Paragraph"),
+            "list" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.List(["Item 1", "Item 2"]),
+            "table" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Table("| Column | Value |\n| --- | --- |\n| Example | 1 |"),
+            "image" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Image("https://", "image"),
+            "gif" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Gif("https://", "gif"),
+            "link" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Link("Link text", "https://"),
+            "lottie" => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Lottie("cover"),
+            _ => WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel.Paragraph("Paragraph")
+        };
     }
 
     private void GoBack()
@@ -271,12 +659,12 @@ else
         parseResult = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupParser.Parse(editorText);
         diagnostics = parseResult.Diagnostics.ToList();
 
-        foreach (var segment in parseResult.Segments.Where(s => s.Type ==
-WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupSegmentType.Lottie))
+        foreach (var component in components.Where(component => component.Type ==
+WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie))
         {
-            if (ResolveLottieData(segment.Value) is null)
+            if (ResolveLottieData(component.LottieSource) is null)
             {
-                diagnostics.Add($"Unknown lottie source '{segment.Value}'. Available source: cover.");
+                diagnostics.Add($"Unknown lottie source '{component.LottieSource}'. Available source: cover.");
             }
         }
     }
