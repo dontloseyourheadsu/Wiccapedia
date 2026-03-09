@@ -1,5 +1,6 @@
 ﻿@page "/"
 @attribute [Authorize]
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject WiccapediaGrimoire.Services.Notebooks.NotebooksService NotebooksService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -71,6 +72,7 @@ else
     private string sortBy = "updated";
     private string direction = "desc";
     private string? errorMessage;
+    private bool isCreatingDemoNotebook;
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,10 +88,25 @@ else
         {
             var response = await NotebooksService.GetMyNotebooksAsync(search, sortBy, direction);
             notebooks = response?.Notebooks ?? [];
+
+            if (notebooks.Count == 0)
+            {
+                await EnsureDemoNotebookAsync();
+            }
+        }
+        catch (AccessTokenNotAvailableException tokenException)
+        {
+            tokenException.Redirect();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            errorMessage = "Your session token is missing or invalid. Please click Log in again from the top-right button.";
         }
         catch (Exception ex)
         {
-            errorMessage = ex.Message;
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Unable to load notebooks right now."
+                : ex.Message;
         }
 
         isLoading = false;
@@ -115,10 +132,27 @@ else
 
     private async Task CreateNotebookAsync()
     {
-        var notebook = await NotebooksService.CreateNotebookAsync("New Notebook");
-        if (notebook is not null)
+        try
         {
-            OpenNotebook(notebook.Id);
+            var notebook = await NotebooksService.CreateNotebookAsync("New Notebook");
+            if (notebook is not null)
+            {
+                OpenNotebook(notebook.Id);
+            }
+        }
+        catch (AccessTokenNotAvailableException tokenException)
+        {
+            tokenException.Redirect();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            errorMessage = "Your session token is missing or invalid. Please click Log in again from the top-right button.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Unable to create a notebook right now."
+                : ex.Message;
         }
     }
 
@@ -130,8 +164,58 @@ else
             return;
         }
 
-        await NotebooksService.DeleteNotebookAsync(notebookId);
-        await LoadNotebooksAsync();
+        try
+        {
+            await NotebooksService.DeleteNotebookAsync(notebookId);
+            await LoadNotebooksAsync();
+        }
+        catch (AccessTokenNotAvailableException tokenException)
+        {
+            tokenException.Redirect();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            errorMessage = "Your session token is missing or invalid. Please click Log in again from the top-right button.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Unable to delete this notebook right now."
+                : ex.Message;
+        }
+    }
+
+    private async Task EnsureDemoNotebookAsync()
+    {
+        if (isCreatingDemoNotebook)
+        {
+            return;
+        }
+
+        isCreatingDemoNotebook = true;
+
+        try
+        {
+            await NotebooksService.CreateNotebookAsync("Demo Notebook");
+            var response = await NotebooksService.GetMyNotebooksAsync(search, sortBy, direction);
+            notebooks = response?.Notebooks ?? [];
+        }
+        catch (AccessTokenNotAvailableException tokenException)
+        {
+            tokenException.Redirect();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            errorMessage = "Your session token is missing or invalid. Please click Log in again from the top-right button.";
+        }
+        catch
+        {
+            // Keep the UI stable; the server already auto-provisions this in normal flow.
+        }
+        finally
+        {
+            isCreatingDemoNotebook = false;
+        }
     }
 
     private void OpenNotebook(int notebookId)
