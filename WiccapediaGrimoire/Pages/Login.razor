@@ -1,34 +1,79 @@
 @page "/login"
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Login</PageTitle>
 
-<div class="auth-container">
-    <div class="auth-card">
-        <h2>Welcome Back</h2>
-        <p>Choose your login method</p>
-
-        <div class="d-grid gap-3">
-            <button class="btn btn-google" @onclick="LoginWithGoogle">
-                <i class="bi bi-google me-2"></i> Sign in with Google
-            </button>
-
-            <button class="btn btn-password" @onclick="NavigateToSignIn">
-                <i class="bi bi-envelope me-2"></i> Sign in with Password
-            </button>
-        </div>
-
-        <div class="mt-4 text-center">
-            <p>Don't have an account? <a href="signup">Sign up</a></p>
+@if (isCheckingAuth)
+{
+    <div class="auth-container">
+        <div class="auth-card auth-card-loading">
+            <p>Checking sign-in status…</p>
         </div>
     </div>
-</div>
+}
+else if (!isAuthenticated || forceLogin)
+{
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Welcome Back</h2>
+            @if (forceLogin)
+            {
+                <p>Your session needs to be refreshed. Choose a login method to continue.</p>
+            }
+            else
+            {
+                <p>Choose your login method</p>
+            }
+
+            <div class="d-grid gap-3">
+                <button class="btn btn-google" @onclick="LoginWithGoogle">
+                    <i class="bi bi-google me-2"></i> Sign in with Google
+                </button>
+
+                <button class="btn btn-password" @onclick="NavigateToSignIn">
+                    <i class="bi bi-envelope me-2"></i> Sign in with Password
+                </button>
+            </div>
+
+            <div class="mt-4 text-center">
+                <p>Don't have an account? <a href="signup">Sign up</a></p>
+            </div>
+
+            @if (forceLogin && isAuthenticated)
+            {
+                <div class="mt-3 text-center">
+                    <a href="/">Continue to app</a>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 @code {
+    private bool isCheckingAuth = true;
+    private bool isAuthenticated;
+    private bool forceLogin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forceLogin = Navigation.Uri.Contains("forceLogin=true", StringComparison.OrdinalIgnoreCase);
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+        isCheckingAuth = false;
+
+        if (isAuthenticated && !forceLogin)
+        {
+            Navigation.NavigateTo("/", replace: true);
+        }
+    }
+
     private void LoginWithGoogle()
     {
-        Navigation.NavigateToLogin("authentication/login");
+        Navigation.NavigateToLogin("authentication/login?returnUrl=/");
     }
 
     private void NavigateToSignIn()
