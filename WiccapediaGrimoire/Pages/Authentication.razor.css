@@ -1,0 +1,14 @@
+.auth-flow-status {
+    min-height: 72vh;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.8rem;
+    text-align: center;
+}
+
+.auth-flow-title {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+}

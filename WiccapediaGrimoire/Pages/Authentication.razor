@@ -1,7 +1,116 @@
 ﻿@page "/authentication/{action}"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-<RemoteAuthenticatorView Action="@Action" />
+@inject NavigationManager Navigation
+<RemoteAuthenticatorView Action="@Action">
+    <LoggingIn>
+        <section class="auth-flow-status" role="status" aria-live="polite">
+            <div class="app-loader__spinner" aria-hidden="true"></div>
+            <p class="auth-flow-title">Redirecting to sign-in…</p>
+        </section>
+    </LoggingIn>
 
-@code{
+    <CompletingLoggingIn>
+        <section class="auth-flow-status" role="status" aria-live="polite">
+            <div class="app-loader__spinner" aria-hidden="true"></div>
+            <p class="auth-flow-title">Finishing sign-in…</p>
+        </section>
+    </CompletingLoggingIn>
+
+    <LogInFailed>
+        <section class="auth-flow-status">
+            <p class="auth-flow-title">Sign-in failed. Please try again.</p>
+            @if (failureDetails.Count > 0)
+            {
+                <div class="mt-2 text-start" style="max-width: 900px; word-break: break-word;">
+                    <p><strong>Provider error details:</strong></p>
+                    <ul>
+                        @foreach (var detail in failureDetails)
+                        {
+                            <li><strong>@detail.Key</strong>: @detail.Value</li>
+                        }
+                    </ul>
+                </div>
+            }
+            else if (string.Equals(Action, "login-failed", StringComparison.OrdinalIgnoreCase))
+            {
+                <div class="mt-2 text-start" style="max-width: 900px; word-break: break-word;">
+                    <p><strong>No provider parameters were found in callback URL.</strong></p>
+                    <p class="mb-0"><strong>Current URL:</strong> @Navigation.Uri</p>
+                </div>
+            }
+            <a href="/login">Return to login</a>
+        </section>
+    </LogInFailed>
+</RemoteAuthenticatorView>
+
+@code {
     [Parameter] public string? Action { get; set; }
+
+    private IReadOnlyDictionary<string, string> failureDetails = new Dictionary<string, string>();
+
+    protected override void OnParametersSet()
+    {
+        if (string.Equals(Action, "login-failed", StringComparison.OrdinalIgnoreCase))
+        {
+            var uri = new Uri(Navigation.Uri);
+            failureDetails = Merge(
+                ParseNameValuePairs(uri.Query),
+                ParseNameValuePairs(uri.Fragment));
+        }
+        else
+        {
+            failureDetails = new Dictionary<string, string>();
+        }
+    }
+
+    private static IReadOnlyDictionary<string, string> Merge(
+        IReadOnlyDictionary<string, string> first,
+        IReadOnlyDictionary<string, string> second)
+    {
+        var merged = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var pair in first)
+        {
+            merged[pair.Key] = pair.Value;
+        }
+
+        foreach (var pair in second)
+        {
+            merged[pair.Key] = pair.Value;
+        }
+
+        return merged;
+    }
+
+    private static IReadOnlyDictionary<string, string> ParseNameValuePairs(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return new Dictionary<string, string>();
+        }
+
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var trimmed = input;
+
+        if (trimmed.StartsWith("?", StringComparison.Ordinal) || trimmed.StartsWith("#", StringComparison.Ordinal))
+        {
+            trimmed = trimmed[1..];
+        }
+
+        foreach (var pair in trimmed.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var equalsIndex = pair.IndexOf('=');
+            if (equalsIndex < 0)
+            {
+                result[Uri.UnescapeDataString(pair)] = string.Empty;
+                continue;
+            }
+
+            var key = Uri.UnescapeDataString(pair[..equalsIndex]);
+            var value = Uri.UnescapeDataString(pair[(equalsIndex + 1)..]);
+            result[key] = value;
+        }
+
+        return result;
+    }
 }
