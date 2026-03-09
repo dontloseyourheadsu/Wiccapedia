@@ -29,6 +29,21 @@ builder.Services.AddHttpClient<NotebooksService>(client =>
 builder.Services.AddOidcAuthentication(options =>
 {
     builder.Configuration.Bind("Local", options.ProviderOptions);
+
+    if (!options.ProviderOptions.DefaultScopes.Contains("openid"))
+    {
+        options.ProviderOptions.DefaultScopes.Add("openid");
+    }
+
+    if (!options.ProviderOptions.DefaultScopes.Contains("profile"))
+    {
+        options.ProviderOptions.DefaultScopes.Add("profile");
+    }
+
+    if (!options.ProviderOptions.DefaultScopes.Contains("email"))
+    {
+        options.ProviderOptions.DefaultScopes.Add("email");
+    }
 });
 
 await builder.Build().RunAsync();
