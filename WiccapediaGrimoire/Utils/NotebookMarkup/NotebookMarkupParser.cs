@@ -66,7 +66,7 @@ public static class NotebookMarkupParser
             var payload = text[(index + 2)..closing].Trim();
             if (payload.StartsWith("lottie:", StringComparison.OrdinalIgnoreCase))
             {
-                var value = payload["lottie:".Length..].Trim();
+                var value = payload["lottie:".Length..].Trim().TrimEnd('\\').Trim();
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     diagnostics.Add("Custom lottie block is missing a value. Example: \\{lottie:cover\\}");

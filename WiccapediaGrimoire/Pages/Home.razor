@@ -56,7 +56,7 @@ else
                 <details class="card-actions" @onclick:stopPropagation="true">
                     <summary>⋯</summary>
                     <div class="card-actions-menu">
-                        <button @onclick="() => OpenNotebook(notebook.Id)">Edit</button>
+                        <button @onclick="() => OpenNotebookInEditMode(notebook.Id)">Edit</button>
                         <button @onclick="() => DeleteNotebookAsync(notebook.Id)">Delete</button>
                     </div>
                 </details>
@@ -221,5 +221,10 @@ else
     private void OpenNotebook(int notebookId)
     {
         Navigation.NavigateTo($"/notebooks/{notebookId}");
+    }
+
+    private void OpenNotebookInEditMode(int notebookId)
+    {
+        Navigation.NavigateTo($"/notebooks/{notebookId}?mode=edit");
     }
 }
