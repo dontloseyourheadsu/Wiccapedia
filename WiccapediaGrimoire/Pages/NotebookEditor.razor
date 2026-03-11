@@ -15,181 +15,244 @@ else if (notebook is null)
 }
 else
 {
-    <section class="editor-top-bar">
-        <button class="secondary-button" @onclick="GoBack">Back</button>
+    @if (!string.IsNullOrWhiteSpace(snackbarMessage))
+    {
+        <div class="snackbar @(isSnackbarError ? "error" : "success")">@snackbarMessage</div>
+    }
 
-        <div class="title-row">
-            <input class="title-input" value="@titleDraft" @oninput="OnTitleChanged" />
-            <button class="secondary-button" @onclick="SaveTitleAsync">Save title</button>
-            <button class="secondary-button" @onclick="SavePageAsync">Save page</button>
-        </div>
+    @if (isReadMode)
+    {
+        <section class="read-mode-shell">
+            <section class="editor-top-bar">
+                <button class="secondary-button" @onclick="GoBack">Back</button>
+            </section>
 
-        <div class="mode-toggle">
-            <button class="@(editorMode == EditorMode.Code ? "active" : null)"
-                    @onclick="() => SetMode(EditorMode.Code)">Code</button>
-            <button class="@(editorMode == EditorMode.DragDrop ? "active" : null)"
-                    @onclick="() => SetMode(EditorMode.DragDrop)">Drag &amp; Drop</button>
-        </div>
-    </section>
+            <div class="read-preview-pane">
+                <div class="read-book">
+                    @foreach (var page in ReadSpreadPages)
+                    {
+                        <article class="read-page">
+                            <header class="read-page-header">
+                                <span class="subtle">@GetPageLabel(page)</span>
+                            </header>
 
-    <section class="page-controls">
-        <button class="secondary-button" disabled="@(CurrentPage?.PreviousPageId is null)"
-                @onclick="GoToPreviousPage">Prev</button>
-        <button class="secondary-button" disabled="@(CurrentPage?.NextPageId is null)" @onclick="GoToNextPage">Next</button>
-        <button class="secondary-button" @onclick="CreatePageAsync">Create page</button>
-        <button class="secondary-button" disabled="@(notebook.Pages.Count <= 1)" @onclick="DeleteCurrentPageAsync">Delete
-            page</button>
-            <span class="subtle">@CurrentPageLabel</span>
-        </section>
-
-        <section class="editor-body">
-            @if (editorMode == EditorMode.Code)
-            {
-                <div class="code-pane">
-                    <div class="code-toolbar">
-                        <span class="subtle">Custom syntax: \{lottie:cover\} and \\ to escape a backslash.</span>
-                    </div>
-
-                    <textarea class="code-editor" value="@editorText" @oninput="OnEditorInput"></textarea>
-
-                    <div class="syntax-console">
-                        <h3>Syntax Console</h3>
-                        @if (diagnostics.Count == 0)
-                        {
-                            <p class="ok-message">No syntax issues found.</p>
-                        }
-                        else
-                        {
-                            <ul>
-                                @foreach (var message in diagnostics)
+                            <div class="read-page-content">
+                                @foreach (var component in ParseComponents(page.Markdown))
                                 {
-                                    <li>@message</li>
+                                    <article class="read-component">
+                                        @RenderComponentPreview(component)
+                                    </article>
                                 }
-                            </ul>
-                        }
-                    </div>
+                            </div>
+                        </article>
+                    }
                 </div>
-            }
-            else
-            {
-                <div class="palette-pane">
-                    <div class="palette-header">
-                        <h3>Components</h3>
-                        <input class="palette-search" placeholder="Search groups or components" value="@componentSearch"
-                               @oninput="OnPaletteSearchChanged" />
-                    </div>
+            </div>
 
-                    <div class="palette-groups">
-                        @foreach (var group in FilteredPaletteGroups())
-                        {
-                            <section class="palette-group">
-                                <button class="group-toggle" @onclick="() => ToggleGroup(group.Name)">
-                                    <span class="material-icons">@group.Icon</span>
-                                    <span>@group.Name</span>
-                                    <span class="material-icons">@(IsGroupExpanded(group.Name) ? "expand_less" : "expand_more")</span>
-                                </button>
-
-                                @if (IsGroupExpanded(group.Name))
-                                {
-                                    <div class="group-components">
-                                        @foreach (var component in FilteredGroupComponents(group))
-                                        {
-                                            <button class="component-button" draggable="true"
-                                                    @ondragstart="() => StartPaletteDrag(component.TypeKey)"
-                                                    @onclick="() => AddComponentByType(component.TypeKey)">
-                                                <span class="material-icons">@component.Icon</span>
-                                                <span>@component.Name</span>
-                                            </button>
-                                        }
-                                    </div>
-                                }
-                            </section>
-                        }
-                    </div>
-                </div>
-            }
-
-            <div class="preview-pane" @ondragover="HandleDragOver" @ondragover:preventDefault="true" @ondrop="HandleDropToEnd"
-                 @ondrop:preventDefault="true">
-                <div class="preview-title-row">
-                    <h3>Editable Preview</h3>
-                    <span class="subtle">Edit content here in both modes</span>
-                </div>
-
-                @for (var index = 0; index < components.Count; index++)
-                {
-                    var component = components[index];
-                    <article class="component-card @(selectedComponentIndex == index ? "selected" : null)" draggable="true"
-                             @ondragstart="() => StartCanvasDrag(index)" @ondragover="HandleDragOver" @ondragover:preventDefault="true"
-                             @ondrop="() => HandleDropAt(index)" @ondrop:preventDefault="true"
-                             @onclick="() => selectedComponentIndex = index">
-                        <header class="component-header">
-                            <span class="component-title">
-                                <span class="material-icons">@GetComponentIcon(component.Type)</span>
-                                @GetComponentName(component.Type)
-                            </span>
-                            <button class="icon-button" @onclick="() => RemoveComponent(index)">
-                                <span class="material-icons">delete</span>
-                            </button>
-                        </header>
-
-                        @switch (component.Type)
-                        {
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Heading:
-                                <div class="field-row">
-                                    <select value="@component.Level" @onchange="(e) => OnHeadingLevelChanged(index, e)">
-                                        @for (var level = 1; level <= 6; level++)
-                                        {
-                                            <option value="@level">H@level</option>
-                                        }
-                                    </select>
-                                    <input value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
-                                           placeholder="Heading text" />
-                                </div>
-                                break;
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Paragraph:
-                                <textarea value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
-                                          placeholder="Paragraph text"></textarea>
-                                break;
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.List:
-                                <textarea value="@string.Join("\n", component.Items)" @oninput="(e) => OnListItemsChanged(index, e)"
-                                          placeholder="One item per line"></textarea>
-                                break;
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Table:
-                                <textarea value="@component.TableRaw" @oninput="(e) => OnTableChanged(index, e)"
-                                          placeholder="Markdown table"></textarea>
-                                break;
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Image:
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Gif:
-                                <div class="field-col">
-                                    <input value="@component.Url" @oninput="(e) => OnUrlChanged(index, e)" placeholder="https://..." />
-                                    <input value="@component.Alt" @oninput="(e) => OnAltChanged(index, e)" placeholder="Alt text" />
-                                </div>
-                                break;
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Link:
-                                <div class="field-col">
-                                    <input value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
-                                           placeholder="Link text" />
-                                    <input value="@component.Url" @oninput="(e) => OnUrlChanged(index, e)" placeholder="https://..." />
-                                </div>
-                                break;
-                            case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie:
-                                <input value="@component.LottieSource" @oninput="(e) => OnLottieSourceChanged(index, e)"
-                                       placeholder="cover" />
-                                break;
-                        }
-
-                        <div class="component-render">
-                            @RenderComponentPreview(component)
-                        </div>
-                    </article>
-                }
+            <div class="read-nav-bottom">
+                <button class="secondary-button" disabled="@(!HasPreviousReadSpread)"
+                        @onclick="GoToPreviousReadSpread">Prev</button>
+                <button class="secondary-button" disabled="@(!HasNextReadSpread)" @onclick="GoToNextReadSpread">Next</button>
             </div>
         </section>
     }
+    else
+    {
+        <section class="editor-top-bar">
+            <button class="secondary-button" @onclick="GoBack">Back</button>
+
+            <div class="title-row">
+                <input class="title-input" value="@titleDraft" @oninput="OnTitleChanged" />
+                <button class="secondary-button" @onclick="SaveTitleAsync">Save title</button>
+                <button class="secondary-button" @onclick="SavePageAsync">Save page</button>
+            </div>
+
+            <div class="mode-toggle">
+                <button class="@(editorMode == EditorMode.Code ? "active" : null)"
+                        @onclick="() => SetMode(EditorMode.Code)">Code</button>
+                <button class="@(editorMode == EditorMode.DragDrop ? "active" : null)"
+                        @onclick="() => SetMode(EditorMode.DragDrop)">Drag &amp; Drop</button>
+            </div>
+        </section>
+
+        <section class="page-controls">
+            <button class="secondary-button" disabled="@(CurrentPage?.PreviousPageId is null)"
+                    @onclick="GoToPreviousPage">Prev</button>
+            <button class="secondary-button" disabled="@(CurrentPage?.NextPageId is null)" @onclick="GoToNextPage">Next</button>
+            <button class="secondary-button" @onclick="CreatePageAsync">Create page</button>
+            <button class="secondary-button" disabled="@(notebook.Pages.Count <= 1)" @onclick="DeleteCurrentPageAsync">Delete
+                page</button>
+                <span class="subtle">@CurrentPageLabel</span>
+            </section>
+
+            <section class="editor-body">
+                @if (editorMode == EditorMode.Code)
+                {
+                    <div class="code-pane">
+                        <div class="code-toolbar">
+                            <span class="subtle">Custom syntax: \{lottie:cover\} and \\ to escape a backslash.</span>
+                        </div>
+
+                        <textarea class="code-editor" value="@editorText" @oninput="OnEditorInput"></textarea>
+
+                        <div class="syntax-console">
+                            <h3>Syntax Console</h3>
+                            @if (diagnostics.Count == 0)
+                            {
+                                <p class="ok-message">No syntax issues found.</p>
+                            }
+                            else
+                            {
+                                <ul>
+                                    @foreach (var message in diagnostics)
+                                    {
+                                        <li>@message</li>
+                                    }
+                                </ul>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="palette-pane">
+                        <div class="palette-header">
+                            <h3>Components</h3>
+                            <input class="palette-search" placeholder="Search groups or components" value="@componentSearch"
+                                   @oninput="OnPaletteSearchChanged" />
+                        </div>
+
+                        <div class="palette-groups">
+                            @foreach (var group in FilteredPaletteGroups())
+                            {
+                                <section class="palette-group">
+                                    <button class="group-toggle" @onclick="() => ToggleGroup(group.Name)">
+                                        <span class="material-icons">@group.Icon</span>
+                                        <span>@group.Name</span>
+                                        <span class="material-icons">@(IsGroupExpanded(group.Name) ? "expand_less" : "expand_more")</span>
+                                    </button>
+
+                                    @if (IsGroupExpanded(group.Name))
+                                    {
+                                        <div class="group-components">
+                                            @foreach (var component in FilteredGroupComponents(group))
+                                            {
+                                                <button class="component-button" draggable="true"
+                                                        @ondragstart="() => StartPaletteDrag(component.TypeKey)"
+                                                        @onclick="() => AddComponentByType(component.TypeKey)">
+                                                    <span class="material-icons">@component.Icon</span>
+                                                    <span>@component.Name</span>
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </section>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="preview-pane" @ondragover="HandleDragOver" @ondragover:preventDefault="true" @ondrop="HandleDropToEnd"
+                     @ondrop:preventDefault="true">
+                    <div class="preview-title-row">
+                        <h3>Editable Preview</h3>
+                        <div class="preview-actions">
+                            <span class="subtle">Edit content here in both modes</span>
+                            <button class="secondary-button" @onclick="ToggleInlinePreview">@(showInlinePreview ? "Edit preview" :
+                                                                                                              "Preview")</button>
+                            </div>
+                        </div>
+
+                        @if (showInlinePreview)
+                        {
+                            <div class="inline-preview-stack">
+                                @foreach (var component in inlinePreviewComponents)
+                                {
+                                    <article class="inline-preview-item">
+                                        @RenderComponentPreview(component)
+                                    </article>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            @for (var index = 0; index < components.Count; index++)
+                            {
+                                var component = components[index];
+                                <article class="component-card @(selectedComponentIndex == index ? "selected" : null)" draggable="true"
+                                         @ondragstart="() => StartCanvasDrag(index)" @ondragover="HandleDragOver" @ondragover:preventDefault="true"
+                                         @ondrop="() => HandleDropAt(index)" @ondrop:preventDefault="true"
+                                         @onclick="() => selectedComponentIndex = index">
+                                    <header class="component-header">
+                                        <span class="component-title">
+                                            <span class="material-icons">@GetComponentIcon(component.Type)</span>
+                                            @GetComponentName(component.Type)
+                                        </span>
+                                        <button class="icon-button" @onclick="() => RemoveComponent(index)">
+                                            <span class="material-icons">delete</span>
+                                        </button>
+                                    </header>
+
+                                    @switch (component.Type)
+                                    {
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Heading:
+                                            <div class="field-row">
+                                                <select value="@component.Level" @onchange="(e) => OnHeadingLevelChanged(index, e)">
+                                                    @for (var level = 1; level <= 6; level++)
+                                                    {
+                                                        <option value="@level">H@level</option>
+                                                    }
+                                                </select>
+                                                <input value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
+                                                       placeholder="Heading text" />
+                                            </div>
+                                            break;
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Paragraph:
+                                            <textarea value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
+                                                      placeholder="Paragraph text"></textarea>
+                                            break;
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.List:
+                                            <textarea value="@string.Join("\n", component.Items)" @oninput="(e) => OnListItemsChanged(index, e)"
+                                                      placeholder="One item per line"></textarea>
+                                            break;
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Table:
+                                            <textarea value="@component.TableRaw" @oninput="(e) => OnTableChanged(index, e)"
+                                                      placeholder="Markdown table"></textarea>
+                                            break;
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Image:
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Gif:
+                                            <div class="field-col">
+                                                <input value="@component.Url" @oninput="(e) => OnUrlChanged(index, e)" placeholder="https://..." />
+                                                <input value="@component.Alt" @oninput="(e) => OnAltChanged(index, e)" placeholder="Alt text" />
+                                            </div>
+                                            break;
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Link:
+                                            <div class="field-col">
+                                                <input value="@component.Text" @oninput="(e) => OnComponentTextChanged(index, e)"
+                                                       placeholder="Link text" />
+                                                <input value="@component.Url" @oninput="(e) => OnUrlChanged(index, e)" placeholder="https://..." />
+                                            </div>
+                                            break;
+                                        case WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie:
+                                            <input value="@component.LottieSource" @oninput="(e) => OnLottieSourceChanged(index, e)"
+                                                   placeholder="cover" />
+                                            break;
+                                    }
+
+                                    <div class="component-render">
+                                        @RenderComponentPreview(component)
+                                    </div>
+                                </article>
+                            }
+                        }
+                    </div>
+                </section>
+            }
+        }
 
 @code {
     [Parameter] public int NotebookId { get; set; }
+    [SupplyParameterFromQuery(Name = "mode")] public string? Mode { get; set; }
 
     private WiccapediaContracts.Notebooks.Responses.NotebookDetailsResponse? notebook;
     private WiccapediaContracts.Notebooks.Responses.NotebookPageResponse? CurrentPage =>
@@ -199,10 +262,16 @@ else
     private string editorText = string.Empty;
     private int currentPageId;
     private bool isLoading = true;
+    private bool isReadMode = true;
+    private bool showInlinePreview;
+    private string? snackbarMessage;
+    private bool isSnackbarError;
+    private int snackbarVersion;
     private EditorMode editorMode = EditorMode.Code;
     private WiccapediaGrimoire.Utils.NotebookMarkup.NotebookMarkupParseResult parseResult = new([], []);
     private List<string> diagnostics = [];
     private List<WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel> components = [];
+    private List<WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel> inlinePreviewComponents = [];
     private string componentSearch = string.Empty;
     private int? selectedComponentIndex;
     private int? canvasDraggedIndex;
@@ -237,6 +306,32 @@ else
                 ? "Cover"
                 : $"Page {notebook?.Pages.ToList().FindIndex(p => p.Id == CurrentPage.Id) + 1}";
 
+    private WiccapediaContracts.Notebooks.Responses.NotebookPageResponse? ReadRightPage =>
+        CurrentPage?.NextPageId is int nextPageId
+            ? notebook?.Pages.FirstOrDefault(p => p.Id == nextPageId)
+            : null;
+
+    private IReadOnlyList<WiccapediaContracts.Notebooks.Responses.NotebookPageResponse> ReadSpreadPages
+    {
+        get
+        {
+            if (CurrentPage is null)
+            {
+                return [];
+            }
+
+            if (ReadRightPage is null)
+            {
+                return [CurrentPage];
+            }
+
+            return [CurrentPage, ReadRightPage];
+        }
+    }
+
+    private bool HasPreviousReadSpread => CurrentPage?.PreviousPageId is not null;
+    private bool HasNextReadSpread => ReadRightPage?.NextPageId is not null;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadNotebookAsync();
@@ -246,6 +341,7 @@ else
     {
         isLoading = true;
         notebook = await NotebooksService.GetNotebookAsync(NotebookId);
+        isReadMode = !string.Equals(Mode, "edit", StringComparison.OrdinalIgnoreCase);
 
         if (notebook is not null)
         {
@@ -280,18 +376,35 @@ else
             return;
         }
 
-        var updatedPage = await NotebooksService.UpdatePageAsync(notebook.Id, CurrentPage.Id, editorText);
-        if (updatedPage is not null)
+        try
         {
+            if (editorMode == EditorMode.DragDrop)
+            {
+                editorText = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Serialize(components);
+            }
+
+            var updatedPage = await NotebooksService.UpdatePageAsync(notebook.Id, CurrentPage.Id, editorText);
+            if (updatedPage is null)
+            {
+                await ShowSnackbarAsync("Unable to save page.", true);
+                return;
+            }
+
             notebook = notebook with
             {
                 Pages = notebook.Pages.Select(page => page.Id == updatedPage.Id ? updatedPage : page).ToList(),
                 UpdatedAtUtc = updatedPage.UpdatedAtUtc
             };
             currentPageId = updatedPage.Id;
-        }
+            editorText = updatedPage.Markdown;
 
-        EvaluateSyntax();
+            RebuildFromEditorText();
+            await ShowSnackbarAsync("Page saved.");
+        }
+        catch
+        {
+            await ShowSnackbarAsync("Unable to save page.", true);
+        }
     }
 
     private async Task CreatePageAsync()
@@ -361,7 +474,6 @@ else
     private void OnEditorInput(ChangeEventArgs eventArgs)
     {
         editorText = eventArgs.Value?.ToString() ?? string.Empty;
-        RebuildFromEditorText();
     }
 
     private void OnTitleChanged(ChangeEventArgs eventArgs)
@@ -386,6 +498,57 @@ else
         }
 
         editorMode = mode;
+    }
+
+    private void ToggleInlinePreview()
+    {
+        if (!showInlinePreview)
+        {
+            if (editorMode == EditorMode.Code)
+            {
+                inlinePreviewComponents = ParseComponents(editorText).ToList();
+                EvaluateSyntax();
+            }
+            else
+            {
+                inlinePreviewComponents = components.ToList();
+            }
+
+            showInlinePreview = true;
+            return;
+        }
+
+        showInlinePreview = false;
+    }
+
+    private void GoToPreviousReadSpread()
+    {
+        if (CurrentPage?.PreviousPageId is not int previousId || notebook is null)
+        {
+            return;
+        }
+
+        var previousPage = notebook.Pages.FirstOrDefault(p => p.Id == previousId);
+        if (previousPage is null)
+        {
+            return;
+        }
+
+        currentPageId = previousPage.PreviousPageId ?? previousPage.Id;
+        editorText = CurrentPage?.Markdown ?? string.Empty;
+        RebuildFromEditorText();
+    }
+
+    private void GoToNextReadSpread()
+    {
+        if (ReadRightPage?.NextPageId is not int nextSpreadStartId)
+        {
+            return;
+        }
+
+        currentPageId = nextSpreadStartId;
+        editorText = CurrentPage?.Markdown ?? string.Empty;
+        RebuildFromEditorText();
     }
 
     private void OnPaletteSearchChanged(ChangeEventArgs eventArgs)
@@ -518,6 +681,11 @@ toIndex)
 
     private void OnHeadingLevelChanged(int index, ChangeEventArgs eventArgs)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         if (!int.TryParse(eventArgs.Value?.ToString(), out var level))
         {
             return;
@@ -528,11 +696,21 @@ toIndex)
 
     private void OnComponentTextChanged(int index, ChangeEventArgs eventArgs)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         ReplaceComponent(index, components[index] with { Text = eventArgs.Value?.ToString() ?? string.Empty });
     }
 
     private void OnListItemsChanged(int index, ChangeEventArgs eventArgs)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         var items = (eventArgs.Value?.ToString() ?? string.Empty)
             .Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
             .ToList();
@@ -542,28 +720,58 @@ toIndex)
 
     private void OnTableChanged(int index, ChangeEventArgs eventArgs)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         ReplaceComponent(index, components[index] with { TableRaw = eventArgs.Value?.ToString() ?? string.Empty });
     }
 
     private void OnUrlChanged(int index, ChangeEventArgs eventArgs)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         ReplaceComponent(index, components[index] with { Url = eventArgs.Value?.ToString() ?? string.Empty });
     }
 
     private void OnAltChanged(int index, ChangeEventArgs eventArgs)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         ReplaceComponent(index, components[index] with { Alt = eventArgs.Value?.ToString() ?? string.Empty });
     }
 
     private void OnLottieSourceChanged(int index, ChangeEventArgs eventArgs)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         ReplaceComponent(index, components[index] with { LottieSource = eventArgs.Value?.ToString() ?? string.Empty });
     }
 
     private void ReplaceComponent(int index, WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel updated)
     {
+        if (!IsValidComponentIndex(index))
+        {
+            return;
+        }
+
         components[index] = updated;
         SyncEditorTextFromComponents();
+    }
+
+    private bool IsValidComponentIndex(int index)
+    {
+        return index >= 0 && index < components.Count;
     }
 
     private void RebuildFromEditorText()
@@ -571,12 +779,43 @@ toIndex)
         components = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Parse(editorText).ToList();
         selectedComponentIndex = components.Count > 0 ? 0 : null;
         EvaluateSyntax();
+
+        if (showInlinePreview && editorMode == EditorMode.DragDrop)
+        {
+            inlinePreviewComponents = components.ToList();
+        }
     }
 
     private void SyncEditorTextFromComponents()
     {
         editorText = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Serialize(components);
         EvaluateSyntax();
+
+        if (showInlinePreview)
+        {
+            inlinePreviewComponents = components.ToList();
+        }
+    }
+
+    private IReadOnlyList<WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel> ParseComponents(string markdown)
+    {
+        return WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Parse(markdown).ToList();
+    }
+
+    private string GetPageLabel(WiccapediaContracts.Notebooks.Responses.NotebookPageResponse page)
+    {
+        if (page.IsCover)
+        {
+            return "Cover";
+        }
+
+        if (notebook is null)
+        {
+            return "Page";
+        }
+
+        var pageIndex = notebook.Pages.ToList().FindIndex(p => p.Id == page.Id);
+        return pageIndex < 0 ? "Page" : $"Page {pageIndex + 1}";
     }
 
     private RenderFragment RenderComponentPreview(WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentModel component)
@@ -676,11 +915,31 @@ WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentType.Lottie))
             return null;
         }
 
-        return source.Trim().ToLowerInvariant() switch
+        var normalizedSource = source.Trim().TrimEnd('\\').Trim().ToLowerInvariant();
+
+        return normalizedSource switch
         {
             "cover" => notebook.CoverLottieData,
             _ => null
         };
+    }
+
+    private async Task ShowSnackbarAsync(string message, bool isError = false)
+    {
+        snackbarMessage = message;
+        isSnackbarError = isError;
+        var currentVersion = ++snackbarVersion;
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(2500);
+
+        if (currentVersion != snackbarVersion)
+        {
+            return;
+        }
+
+        snackbarMessage = null;
+        await InvokeAsync(StateHasChanged);
     }
 
     private enum EditorMode
