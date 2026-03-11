@@ -134,7 +134,9 @@ public class NotebooksController : ControllerBase
             return NotFound();
         }
 
-        page.Markdown = request.Markdown;
+        var markdown = request.Markdown ?? string.Empty;
+        page.Markdown = markdown;
+        _context.Entry(page).Property(p => p.Markdown).IsModified = true;
         page.UpdatedAtUtc = DateTimeOffset.UtcNow;
         notebook.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
