@@ -152,7 +152,7 @@ public static partial class NotebookComponentTranslator
     [GeneratedRegex("^\\[(.*?)\\]\\((.*?)\\)$")]
     private static partial Regex LinkRegex();
 
-    [GeneratedRegex("^\\\\\\{lottie:(.+)\\}$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex("^\\\\\\{lottie:(.+?)\\\\}$", RegexOptions.IgnoreCase)]
     private static partial Regex LottieRegex();
 
     [GeneratedRegex("^\\|?[\\s:-|]+\\|?$")]
