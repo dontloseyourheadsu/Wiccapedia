@@ -171,7 +171,6 @@ public class NotebooksController : ControllerBase
         var newPage = new NotebookPage
         {
             NotebookId = notebook.Id,
-            Title = $"Page {notebook.Pages.Count + 1}",
             Markdown = "",
             IsCover = false,
             PreviousPageId = currentPage.Id,
