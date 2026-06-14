@@ -5,7 +5,7 @@ public class NotebookPage
     public int Id { get; set; }
     public int NotebookId { get; set; }
     public Notebook? Notebook { get; set; }
-    public string Title { get; set; } = "Page";
+    public string? Title { get; set; }
     public string Markdown { get; set; } = "";
     public bool IsCover { get; set; }
     public int? PreviousPageId { get; set; }
