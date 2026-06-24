@@ -9,6 +9,8 @@ public class PageTemplate
     public string? Description { get; set; }
     public string Markdown { get; set; } = string.Empty;
     public string? Css { get; set; }
+    public string? BackgroundType { get; set; } = "none";
+    public string? BackgroundValue { get; set; }
     public string? Group { get; set; }
     public bool IsShared { get; set; }
     public int UserId { get; set; }
