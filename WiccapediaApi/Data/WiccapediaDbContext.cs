@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WiccapediaApp.Models.Users;
 using WiccapediaApp.Models.Notebooks;
+using WiccapediaApp.Models.Templates;
 
 namespace WiccapediaApi.Data;
 
@@ -13,6 +14,7 @@ public class WiccapediaDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Notebook> Notebooks { get; set; }
     public DbSet<NotebookPage> NotebookPages { get; set; }
+    public DbSet<PageTemplate> PageTemplates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,5 +51,11 @@ public class WiccapediaDbContext : DbContext
             .HasIndex(p => new { p.NotebookId, p.IsCover })
             .HasFilter("\"IsCover\" = true")
             .IsUnique();
+
+        modelBuilder.Entity<PageTemplate>()
+            .HasOne(t => t.User)
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
