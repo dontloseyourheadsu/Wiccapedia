@@ -137,6 +137,11 @@ public class NotebooksController : ControllerBase
         var markdown = request.Markdown ?? string.Empty;
         page.Markdown = markdown;
         _context.Entry(page).Property(p => p.Markdown).IsModified = true;
+
+        var css = request.Css;
+        page.Css = css;
+        _context.Entry(page).Property(p => p.Css).IsModified = true;
+
         page.UpdatedAtUtc = DateTimeOffset.UtcNow;
         notebook.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
@@ -145,7 +150,7 @@ public class NotebooksController : ControllerBase
     }
 
     [HttpPost("{id:int}/pages/{pageId:int}/next")]
-    public async Task<ActionResult<NotebookPageResponse>> CreateNextPage(int id, int pageId)
+    public async Task<ActionResult<NotebookPageResponse>> CreateNextPage(int id, int pageId, [FromQuery] int? templateId = null)
     {
         var user = await GetOrCreateCurrentUserAsync();
 
@@ -168,10 +173,25 @@ public class NotebooksController : ControllerBase
             ? notebook.Pages.FirstOrDefault(p => p.Id == currentPage.NextPageId.Value)
             : null;
 
+        var markdown = string.Empty;
+        string? css = null;
+
+        if (templateId.HasValue)
+        {
+            var template = await _context.PageTemplates
+                .FirstOrDefaultAsync(t => t.Id == templateId.Value && (t.UserId == user.Id || t.IsShared));
+            if (template is not null)
+            {
+                markdown = template.Markdown;
+                css = template.Css;
+            }
+        }
+
         var newPage = new NotebookPage
         {
             NotebookId = notebook.Id,
-            Markdown = "",
+            Markdown = markdown,
+            Css = css,
             IsCover = false,
             PreviousPageId = currentPage.Id,
             NextPageId = currentPage.NextPageId,
@@ -384,6 +404,7 @@ public class NotebooksController : ControllerBase
             page.NotebookId,
             page.Title,
             page.Markdown,
+            page.Css,
             page.IsCover,
             page.PreviousPageId,
             page.NextPageId,
