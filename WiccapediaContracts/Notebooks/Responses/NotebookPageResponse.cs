@@ -5,6 +5,7 @@ public record NotebookPageResponse(
     int NotebookId,
     string? Title,
     string Markdown,
+    string? Css,
     bool IsCover,
     int? PreviousPageId,
     int? NextPageId,

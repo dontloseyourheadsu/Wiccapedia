@@ -1,7 +1,13 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 <div class="app-shell">
     <header class="app-header">
-        <a class="app-brand" href="/">Wiccapedia Grimoire</a>
+        <div class="header-left">
+            <a class="app-brand" href="/">Wiccapedia Grimoire</a>
+            <nav class="header-nav">
+                <a href="/" class="nav-link">Notebooks</a>
+                <a href="/templates" class="nav-link">Templates</a>
+            </nav>
+        </div>
         <LoginDisplay />
     </header>
 

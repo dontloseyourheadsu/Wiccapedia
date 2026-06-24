@@ -2,6 +2,8 @@
 @attribute [Authorize]
 @inject WiccapediaGrimoire.Services.Notebooks.NotebooksService NotebooksService
 @inject NavigationManager Navigation
+@inject WiccapediaGrimoire.Services.Templates.TemplatesService TemplatesService
+@using WiccapediaContracts.Templates.Requests
 
 <PageTitle>Notebook Editor</PageTitle>
 
@@ -31,7 +33,13 @@ else
                 <div class="read-book">
                     @foreach (var page in ReadSpreadPages)
                     {
-                        <article class="read-page">
+                        <article class="read-page page-container-@(page.Id)">
+                            @if (!string.IsNullOrWhiteSpace(page.Css))
+                            {
+                                <style>
+                                    @((MarkupString)WiccapediaGrimoire.Utils.CssHelper.ScopeCss(page.Id, page.Css))
+                                </style>
+                            }
                             <header class="read-page-header">
                                 <span class="subtle">@GetPageLabel(page)</span>
                             </header>
@@ -79,21 +87,64 @@ else
             <button class="secondary-button" disabled="@(CurrentPage?.PreviousPageId is null)"
                     @onclick="GoToPreviousPage">Prev</button>
             <button class="secondary-button" disabled="@(CurrentPage?.NextPageId is null)" @onclick="GoToNextPage">Next</button>
-            <button class="secondary-button" @onclick="CreatePageAsync">Create page</button>
-            <button class="secondary-button" disabled="@(notebook.Pages.Count <= 1)" @onclick="DeleteCurrentPageAsync">Delete
-                page</button>
-                <span class="subtle">@CurrentPageLabel</span>
-            </section>
+            
+            <div class="create-page-container">
+                <button class="secondary-button" @onclick="OnCreatePageClick">Create page...</button>
+                @if (showCreatePagePopover)
+                {
+                    <div class="create-page-popover" @onclick:stopPropagation="true">
+                        <h4>Select Layout Template</h4>
+                        <div class="template-options">
+                            <button class="template-option-btn blank" @onclick="() => CreatePageWithTemplateAsync(null)">
+                                <span class="material-icons">note_add</span>
+                                <span>Blank Page</span>
+                            </button>
+                            @foreach (var t in availableTemplates)
+                            {
+                                <button class="template-option-btn" @onclick="() => CreatePageWithTemplateAsync(t.Id)" title="@t.Description">
+                                    <span class="material-icons">auto_awesome</span>
+                                    <div>
+                                        <span class="option-name">@t.Name</span>
+                                        @if (!string.IsNullOrEmpty(t.Group))
+                                        {
+                                            <span class="option-group">@t.Group</span>
+                                        }
+                                    </div>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button class="secondary-button" @onclick="OpenSaveTemplateModal">Save as template</button>
+            <button class="secondary-button" disabled="@(notebook.Pages.Count <= 1)" @onclick="DeleteCurrentPageAsync">Delete page</button>
+            <span class="subtle">@CurrentPageLabel</span>
+        </section>
 
             <section class="editor-body">
                 @if (editorMode == EditorMode.Code)
                 {
                     <div class="code-pane">
-                        <div class="code-toolbar">
-                            <span class="subtle">Custom syntax: \{lottie:cover\} and \\ to escape a backslash.</span>
+                        <div class="editor-tabs">
+                            <button class="editor-tab @(codeTab == CodeTab.Markdown ? "active" : null)" @onclick="() => codeTab = CodeTab.Markdown">Structure (Markdown)</button>
+                            <button class="editor-tab @(codeTab == CodeTab.Css ? "active" : null)" @onclick="() => codeTab = CodeTab.Css">Stylistics (CSS)</button>
                         </div>
 
-                        <textarea class="code-editor" value="@editorText" @oninput="OnEditorInput"></textarea>
+                        @if (codeTab == CodeTab.Markdown)
+                        {
+                            <div class="code-toolbar">
+                                <span class="subtle">Custom syntax: \{lottie:cover\} and \\ to escape a backslash.</span>
+                            </div>
+                            <textarea class="code-editor" value="@editorText" @oninput="OnEditorInput"></textarea>
+                        }
+                        else
+                        {
+                            <div class="code-toolbar">
+                                <span class="subtle">Custom style (CSS rules). Use <code>:self</code> to target the page container.</span>
+                            </div>
+                            <textarea class="code-editor css-editor" value="@currentPageCss" @oninput="OnCssInput" placeholder=":self { background-color: #1a0f26; } h1 { color: #d1b3ff; }"></textarea>
+                        }
 
                         <div class="syntax-console">
                             <h3>Syntax Console</h3>
@@ -152,8 +203,14 @@ else
                     </div>
                 }
 
-                <div class="preview-pane" @ondragover="HandleDragOver" @ondragover:preventDefault="true" @ondrop="HandleDropToEnd"
+                <div class="preview-pane page-container-@currentPageId" @ondragover="HandleDragOver" @ondragover:preventDefault="true" @ondrop="HandleDropToEnd"
                      @ondrop:preventDefault="true">
+                    @if (CurrentPage is not null && !string.IsNullOrWhiteSpace(currentPageCss))
+                    {
+                        <style>
+                            @((MarkupString)WiccapediaGrimoire.Utils.CssHelper.ScopeCss(currentPageId, currentPageCss))
+                        </style>
+                    }
                     <div class="preview-title-row">
                         <h3>Editable Preview</h3>
                         <div class="preview-actions">
@@ -250,6 +307,52 @@ else
             }
         }
 
+    @if (showSaveTemplateModal)
+    {
+        <div class="modal-backdrop" @onclick="() => showSaveTemplateModal = false">
+            <div class="modal-content" @onclick:stopPropagation="true">
+                <header class="modal-header">
+                    <h2>Save Page as Template</h2>
+                    <button class="close-btn" @onclick="() => showSaveTemplateModal = false">&times;</button>
+                </header>
+                <div class="modal-body">
+                    <div class="template-form">
+                        <div class="form-group">
+                            <label for="templateName">Template Name *</label>
+                            <input id="templateName" class="form-input" @bind="newTemplateName" placeholder="e.g. Ritual Layout" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="templateDesc">Description</label>
+                            <textarea id="templateDesc" class="form-input text-area-short" @bind="newTemplateDesc" placeholder="Brief description of the template layout..."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group half-width">
+                                <label for="templateGroup">Group / Category</label>
+                                <input id="templateGroup" class="form-input" @bind="newTemplateGroup" placeholder="e.g. Daily Journal, Grimoire" />
+                            </div>
+                            <div class="form-group half-width checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" @bind="newTemplateIsShared" />
+                                    <span>Share with community</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(saveTemplateError))
+                        {
+                            <div class="error-banner">@saveTemplateError</div>
+                        }
+                        
+                        <div class="modal-footer">
+                            <button class="secondary-button" @onclick="() => showSaveTemplateModal = false">Cancel</button>
+                            <button class="create-button" @onclick="SaveAsTemplateAsync">Save Template</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
 @code {
     [Parameter] public int NotebookId { get; set; }
     [SupplyParameterFromQuery(Name = "mode")] public string? Mode { get; set; }
@@ -260,9 +363,27 @@ else
 
     private string titleDraft = string.Empty;
     private string editorText = string.Empty;
+    private string currentPageCss = string.Empty;
     private int currentPageId;
     private bool isLoading = true;
     private bool isReadMode = true;
+    private CodeTab codeTab = CodeTab.Markdown;
+    private bool showCreatePagePopover;
+    private List<WiccapediaContracts.Templates.Responses.PageTemplateResponse> availableTemplates = [];
+
+    // Save as template modal state
+    private bool showSaveTemplateModal;
+    private string newTemplateName = string.Empty;
+    private string newTemplateDesc = string.Empty;
+    private string newTemplateGroup = string.Empty;
+    private bool newTemplateIsShared;
+    private string? saveTemplateError;
+
+    private enum CodeTab
+    {
+        Markdown,
+        Css
+    }
     private bool showInlinePreview;
     private string? snackbarMessage;
     private bool isSnackbarError;
@@ -349,6 +470,7 @@ else
             currentPageId = notebook.Pages.FirstOrDefault(p => p.IsCover)?.Id
                 ?? notebook.Pages.First().Id;
             editorText = CurrentPage?.Markdown ?? string.Empty;
+            currentPageCss = CurrentPage?.Css ?? string.Empty;
             RebuildFromEditorText();
         }
 
@@ -383,7 +505,7 @@ else
                 editorText = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Serialize(components);
             }
 
-            var updatedPage = await NotebooksService.UpdatePageAsync(notebook.Id, CurrentPage.Id, editorText);
+            var updatedPage = await NotebooksService.UpdatePageAsync(notebook.Id, CurrentPage.Id, editorText, currentPageCss);
             if (updatedPage is null)
             {
                 await ShowSnackbarAsync("Unable to save page.", true);
@@ -397,6 +519,7 @@ else
             };
             currentPageId = updatedPage.Id;
             editorText = updatedPage.Markdown;
+            currentPageCss = updatedPage.Css ?? string.Empty;
 
             RebuildFromEditorText();
             await ShowSnackbarAsync("Page saved.");
@@ -409,20 +532,27 @@ else
 
     private async Task CreatePageAsync()
     {
+        await CreatePageWithTemplateAsync(null);
+    }
+
+    private async Task CreatePageWithTemplateAsync(int? templateId)
+    {
         if (notebook is null || CurrentPage is null)
         {
             return;
         }
 
-        var createdPage = await NotebooksService.CreateNextPageAsync(notebook.Id, CurrentPage.Id);
+        var createdPage = await NotebooksService.CreateNextPageAsync(notebook.Id, CurrentPage.Id, templateId);
         if (createdPage is null)
         {
             return;
         }
 
+        showCreatePagePopover = false;
         await LoadNotebookAsync();
         currentPageId = createdPage.Id;
         editorText = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.Markdown ?? string.Empty;
+        currentPageCss = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.Css ?? string.Empty;
         RebuildFromEditorText();
     }
 
@@ -456,6 +586,7 @@ else
 
         currentPageId = CurrentPage.PreviousPageId.Value;
         editorText = CurrentPage?.Markdown ?? string.Empty;
+        currentPageCss = CurrentPage?.Css ?? string.Empty;
         RebuildFromEditorText();
     }
 
@@ -468,12 +599,75 @@ else
 
         currentPageId = CurrentPage.NextPageId.Value;
         editorText = CurrentPage?.Markdown ?? string.Empty;
+        currentPageCss = CurrentPage?.Css ?? string.Empty;
         RebuildFromEditorText();
     }
 
     private void OnEditorInput(ChangeEventArgs eventArgs)
     {
         editorText = eventArgs.Value?.ToString() ?? string.Empty;
+    }
+
+    private void OnCssInput(ChangeEventArgs eventArgs)
+    {
+        currentPageCss = eventArgs.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task OnCreatePageClick()
+    {
+        showCreatePagePopover = !showCreatePagePopover;
+        if (showCreatePagePopover && availableTemplates.Count == 0)
+        {
+            try
+            {
+                var response = await TemplatesService.GetTemplatesAsync();
+                availableTemplates = response ?? [];
+            }
+            catch { }
+        }
+    }
+
+    private void OpenSaveTemplateModal()
+    {
+        newTemplateName = "";
+        newTemplateDesc = "";
+        newTemplateGroup = "";
+        newTemplateIsShared = false;
+        saveTemplateError = null;
+        showSaveTemplateModal = true;
+    }
+
+    private async Task SaveAsTemplateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newTemplateName))
+        {
+            saveTemplateError = "Name is required.";
+            return;
+        }
+
+        try
+        {
+            var request = new CreatePageTemplateRequest(
+                newTemplateName,
+                newTemplateDesc,
+                newTemplateGroup,
+                editorText,
+                currentPageCss,
+                newTemplateIsShared
+            );
+
+            var result = await TemplatesService.CreateTemplateAsync(request);
+            if (result is not null)
+            {
+                showSaveTemplateModal = false;
+                await ShowSnackbarAsync("Template saved successfully.");
+                availableTemplates.Clear(); // Force reload next time
+            }
+        }
+        catch (Exception)
+        {
+            saveTemplateError = "Failed to save template.";
+        }
     }
 
     private void OnTitleChanged(ChangeEventArgs eventArgs)
