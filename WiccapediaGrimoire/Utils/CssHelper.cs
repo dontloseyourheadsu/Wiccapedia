@@ -61,4 +61,28 @@ public static class CssHelper
 
         return sb.ToString();
     }
+
+    public static string GetBackgroundStyle(string? type, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(type) || type.Equals("none", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        if (type.Equals("url", StringComparison.OrdinalIgnoreCase) || type.Equals("upload", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"background-image: url('{value}'); background-size: cover; background-position: center; background-repeat: no-repeat;";
+        }
+
+        if (type.Equals("style", StringComparison.OrdinalIgnoreCase) || type.Equals("color", StringComparison.OrdinalIgnoreCase))
+        {
+            if (value != null && (value.Contains(':') || value.Contains(';')))
+            {
+                return value;
+            }
+            return $"background: {value};";
+        }
+
+        return string.Empty;
+    }
 }

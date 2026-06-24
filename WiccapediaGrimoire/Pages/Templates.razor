@@ -135,6 +135,13 @@ else
                             <span class="label">Status:</span>
                             <span class="value">@(selectedTemplate.IsShared ? "Shared with community" : "Private")</span>
                         </div>
+                        @if (selectedTemplate.BackgroundType != "none")
+                        {
+                            <div class="detail-row">
+                                <span class="label">Background:</span>
+                                <span class="value">@selectedTemplate.BackgroundType (@(selectedTemplate.BackgroundValue?.StartsWith("data:") == true ? "Uploaded Image" : selectedTemplate.BackgroundValue))</span>
+                            </div>
+                        }
 
                         <div class="code-blocks-row">
                             <div class="code-block-container">
@@ -184,6 +191,42 @@ else
                                     <InputCheckbox @bind-Value="templateModel.IsShared" />
                                     <span>Share with community</span>
                                 </label>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half-width">
+                                <label for="bgType">Background Type</label>
+                                <InputSelect id="bgType" class="form-input control-select" @bind-Value="templateModel.BackgroundType">
+                                    <option value="none">None</option>
+                                    <option value="url">Image URL</option>
+                                    <option value="upload">Image Upload</option>
+                                    <option value="color">Color/CSS Style</option>
+                                </InputSelect>
+                            </div>
+
+                            <div class="form-group half-width">
+                                @if (templateModel.BackgroundType == "url")
+                                {
+                                    <label for="bgValue">Background URL</label>
+                                    <InputText id="bgValue" class="form-input" @bind-Value="templateModel.BackgroundValue" placeholder="https://example.com/image.jpg" />
+                                }
+                                else if (templateModel.BackgroundType == "color")
+                                {
+                                    <label for="bgValue">Background Color/CSS Style</label>
+                                    <InputText id="bgValue" class="form-input" @bind-Value="templateModel.BackgroundValue" placeholder="e.g. #1a0f26 or linear-gradient(...)" />
+                                }
+                                else if (templateModel.BackgroundType == "upload")
+                                {
+                                    <label>Background Upload</label>
+                                    <div class="file-upload-wrapper" style="margin-top: 0.25rem;">
+                                        <InputFile OnChange="HandleTemplateBgUpload" class="file-upload-input" accept="image/*" />
+                                        @if (templateModel.BackgroundValue != null && templateModel.BackgroundValue.StartsWith("data:"))
+                                        {
+                                            <span class="upload-badge success">Uploaded</span>
+                                        }
+                                    </div>
+                                }
                             </div>
                         </div>
 
@@ -333,6 +376,8 @@ else
             Description = template.Description,
             Markdown = template.Markdown,
             Css = template.Css,
+            BackgroundType = template.BackgroundType ?? "none",
+            BackgroundValue = template.BackgroundValue,
             Group = template.Group,
             IsShared = template.IsShared
         };
@@ -359,6 +404,31 @@ else
         selectedTemplate = null;
     }
 
+    private async Task HandleTemplateBgUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null) return;
+
+        try
+        {
+            var buffer = new byte[file.Size];
+            using var stream = file.OpenReadStream(2 * 1024 * 1024);
+            int bytesRead = 0;
+            int totalBytes = 0;
+            while ((bytesRead = await stream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes)) > 0)
+            {
+                totalBytes += bytesRead;
+            }
+
+            var base64 = Convert.ToBase64String(buffer, 0, totalBytes);
+            templateModel.BackgroundValue = $"data:{file.ContentType};base64,{base64}";
+        }
+        catch (Exception)
+        {
+            formErrorMessage = "Failed to upload image. Size limit is 2MB.";
+        }
+    }
+
     private async Task SaveTemplateAsync()
     {
         formErrorMessage = null;
@@ -371,6 +441,8 @@ else
                     templateModel.Description,
                     templateModel.Markdown,
                     templateModel.Css,
+                    templateModel.BackgroundType ?? "none",
+                    templateModel.BackgroundValue,
                     templateModel.Group,
                     templateModel.IsShared
                 );
@@ -389,6 +461,8 @@ else
                     templateModel.Description,
                     templateModel.Markdown,
                     templateModel.Css,
+                    templateModel.BackgroundType ?? "none",
+                    templateModel.BackgroundValue,
                     templateModel.Group,
                     templateModel.IsShared
                 );
@@ -432,6 +506,8 @@ else
         public string? Description { get; set; }
         public string Markdown { get; set; } = string.Empty;
         public string? Css { get; set; }
+        public string? BackgroundType { get; set; } = "none";
+        public string? BackgroundValue { get; set; }
         public string? Group { get; set; }
         public bool IsShared { get; set; }
     }

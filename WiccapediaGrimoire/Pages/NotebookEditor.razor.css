@@ -451,6 +451,67 @@
     }
 }
 
+/* Background config styling in toolbar */
+.bg-config-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: var(--surface-2);
+}
+
+.bg-config-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bg-config-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.bg-config-value {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bg-config-value .control-input {
+    min-height: 2rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    background: var(--surface-1);
+}
+
+.file-upload-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.file-upload-input {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.upload-badge {
+    background: rgba(0, 230, 115, 0.1);
+    color: #00e673;
+    border: 1px solid rgba(0, 230, 115, 0.3);
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
 /* Editor tab navigation */
 .editor-tabs {
     display: flex;
