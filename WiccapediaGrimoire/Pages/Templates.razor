@@ -1,0 +1,438 @@
+@page "/templates"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using WiccapediaContracts.Templates.Requests
+@using WiccapediaContracts.Templates.Responses
+@inject WiccapediaGrimoire.Services.Templates.TemplatesService TemplatesService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Page Templates</PageTitle>
+
+<section class="templates-header">
+    <div>
+        <h1>Page Templates</h1>
+        <p class="subtle">Create layouts with structural markup and stylistical CSS to quickly build new pages.</p>
+    </div>
+
+    <div class="header-actions">
+        <button class="create-button" @onclick="OpenCreateModal">Create Template</button>
+    </div>
+</section>
+
+<section class="controls-panel">
+    <div class="search-box">
+        <span class="material-icons">search</span>
+        <input class="control-input" placeholder="Search templates..." value="@search" @oninput="OnSearchChanged" />
+    </div>
+
+    <div class="filters-row">
+        <div class="filter-group">
+            <label>Group:</label>
+            <select class="control-select" value="@selectedGroup" @onchange="OnGroupChanged">
+                <option value="">All Groups</option>
+                @foreach (var g in groups)
+                {
+                    <option value="@g">@g</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label>Show:</label>
+            <select class="control-select" value="@showFilter" @onchange="OnShowFilterChanged">
+                <option value="all">My &amp; Shared Templates</option>
+                <option value="shared">Shared with me</option>
+            </select>
+        </div>
+    </div>
+</section>
+
+@if (isLoading)
+{
+    <p class="subtle">Loading templates...</p>
+}
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="error-banner">@errorMessage</div>
+}
+else if (templates.Count == 0)
+{
+    <div class="empty-state">
+        <span class="material-icons empty-icon">auto_awesome</span>
+        <h3>No templates found</h3>
+        <p class="subtle">Try adjusting your filters or create a new template.</p>
+    </div>
+}
+else
+{
+    <section class="templates-grid">
+        @foreach (var template in templates)
+        {
+            <article class="template-card" @onclick="() => OpenViewModal(template)">
+                <div class="template-badge-row">
+                    @if (!string.IsNullOrWhiteSpace(template.Group))
+                    {
+                        <span class="group-badge">@template.Group</span>
+                    }
+                    @if (template.IsShared)
+                    {
+                        <span class="shared-badge"><span class="material-icons small-icon">share</span> Shared</span>
+                    }
+                </div>
+
+                <div class="template-card-content">
+                    <h2>@template.Name</h2>
+                    <p class="desc">@template.Description</p>
+                </div>
+
+                <div class="template-card-footer">
+                    <span class="creator">By @template.CreatorName</span>
+                    <span class="updated">@template.UpdatedAtUtc.LocalDateTime.ToString("d")</span>
+                </div>
+            </article>
+        }
+    </section>
+}
+
+@if (showModal)
+{
+    <div class="modal-backdrop" @onclick="CloseModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <header class="modal-header">
+                <h2>@(isEditMode ? (isViewingOnly ? "Template Details" : "Edit Template") : "Create Template")</h2>
+                <button class="close-btn" @onclick="CloseModal">&times;</button>
+            </header>
+
+            <div class="modal-body">
+                @if (isViewingOnly && selectedTemplate != null)
+                {
+                    <div class="details-view">
+                        <div class="detail-row">
+                            <span class="label">Name:</span>
+                            <span class="value font-bold">@selectedTemplate.Name</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(selectedTemplate.Description))
+                        {
+                            <div class="detail-row">
+                                <span class="label">Description:</span>
+                                <span class="value">@selectedTemplate.Description</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(selectedTemplate.Group))
+                        {
+                            <div class="detail-row">
+                                <span class="label">Group:</span>
+                                <span class="value">@selectedTemplate.Group</span>
+                            </div>
+                        }
+                        <div class="detail-row">
+                            <span class="label">Creator:</span>
+                            <span class="value">@selectedTemplate.CreatorName</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Status:</span>
+                            <span class="value">@(selectedTemplate.IsShared ? "Shared with community" : "Private")</span>
+                        </div>
+
+                        <div class="code-blocks-row">
+                            <div class="code-block-container">
+                                <h3>Structure (Markdown)</h3>
+                                <pre class="code-preview"><code>@selectedTemplate.Markdown</code></pre>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(selectedTemplate.Css))
+                            {
+                                <div class="code-block-container">
+                                    <h3>Stylistics (CSS)</h3>
+                                    <pre class="code-preview"><code>@selectedTemplate.Css</code></pre>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="modal-footer">
+                            @if (selectedTemplate.CreatorName == currentUserSessionName)
+                            {
+                                <button class="secondary-button" @onclick="() => EnableEditMode(selectedTemplate)">Edit</button>
+                                <button class="danger-button" @onclick="() => DeleteTemplateAsync(selectedTemplate.Id)">Delete</button>
+                            }
+                            <button class="create-button" @onclick="CloseModal">Close</button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <EditForm Model="@templateModel" OnValidSubmit="SaveTemplateAsync" class="template-form">
+                        <div class="form-group">
+                            <label for="name">Template Name *</label>
+                            <InputText id="name" class="form-input" @bind-Value="templateModel.Name" required placeholder="e.g. Wiccan Recipe" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="desc">Description</label>
+                            <InputTextArea id="desc" class="form-input text-area-short" @bind-Value="templateModel.Description" placeholder="Brief explanation of the layout..." />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half-width">
+                                <label for="group">Group / Category</label>
+                                <InputText id="group" class="form-input" @bind-Value="templateModel.Group" placeholder="e.g. Daily Log, SpellBook" />
+                            </div>
+
+                            <div class="form-group half-width checkbox-group">
+                                <label class="checkbox-label">
+                                    <InputCheckbox @bind-Value="templateModel.IsShared" />
+                                    <span>Share with community</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="code-inputs-row">
+                            <div class="form-group half-width">
+                                <label for="markdown">Structure (Markdown content) *</label>
+                                <InputTextArea id="markdown" class="form-input code-input" @bind-Value="templateModel.Markdown" required placeholder="# Title&#10;&#10;Content here..." />
+                            </div>
+
+                            <div class="form-group half-width">
+                                <label for="css">Stylistics (CSS rules)</label>
+                                <InputTextArea id="css" class="form-input code-input" @bind-Value="templateModel.Css" placeholder=":self {&#10;  background-color: #1a0f26;&#10;}&#10;h1 {&#10;  color: #d1b3ff;&#10;}" />
+                                <span class="help-text">Use <code>:self</code> to target the page container. Other selectors scope automatically.</span>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(formErrorMessage))
+                        {
+                            <div class="error-banner">@formErrorMessage</div>
+                        }
+
+                        <div class="modal-footer">
+                            <button type="button" class="secondary-button" @onclick="CancelForm">Cancel</button>
+                            <button type="submit" class="create-button">Save</button>
+                        </div>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PageTemplateResponse> templates = [];
+    private List<string> groups = [];
+    private bool isLoading = true;
+    private string search = string.Empty;
+    private string selectedGroup = string.Empty;
+    private string showFilter = "all";
+    private string? errorMessage;
+    private string? formErrorMessage;
+
+    // Modal state
+    private bool showModal;
+    private bool isEditMode;
+    private bool isViewingOnly;
+    private PageTemplateResponse? selectedTemplate;
+    private TemplateFormModel templateModel = new();
+    
+    // Auth context details (to allow editing/deleting own templates)
+    private string currentUserSessionName = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroupsAsync();
+        await LoadTemplatesAsync();
+
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            currentUserSessionName = authState.User.FindFirst("name")?.Value
+                ?? authState.User.Identity?.Name
+                ?? string.Empty;
+        }
+        catch { }
+    }
+
+    private async Task LoadTemplatesAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            bool? onlyShared = showFilter == "shared" ? true : null;
+            var response = await TemplatesService.GetTemplatesAsync(
+                string.IsNullOrWhiteSpace(search) ? null : search,
+                string.IsNullOrWhiteSpace(selectedGroup) ? null : selectedGroup,
+                onlyShared
+            );
+
+            templates = response ?? [];
+        }
+        catch (AccessTokenNotAvailableException tokenException)
+        {
+            tokenException.Redirect();
+        }
+        catch (Exception)
+        {
+            errorMessage = "Unable to load templates right now.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadGroupsAsync()
+    {
+        try
+        {
+            groups = await TemplatesService.GetTemplateGroupsAsync() ?? [];
+        }
+        catch { }
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs eventArgs)
+    {
+        search = eventArgs.Value?.ToString() ?? string.Empty;
+        await LoadTemplatesAsync();
+    }
+
+    private async Task OnGroupChanged(ChangeEventArgs eventArgs)
+    {
+        selectedGroup = eventArgs.Value?.ToString() ?? string.Empty;
+        await LoadTemplatesAsync();
+    }
+
+    private async Task OnShowFilterChanged(ChangeEventArgs eventArgs)
+    {
+        showFilter = eventArgs.Value?.ToString() ?? "all";
+        await LoadTemplatesAsync();
+    }
+
+    private void OpenCreateModal()
+    {
+        templateModel = new TemplateFormModel();
+        isEditMode = false;
+        isViewingOnly = false;
+        formErrorMessage = null;
+        showModal = true;
+    }
+
+    private void OpenViewModal(PageTemplateResponse template)
+    {
+        selectedTemplate = template;
+        isViewingOnly = true;
+        showModal = true;
+    }
+
+    private void EnableEditMode(PageTemplateResponse template)
+    {
+        templateModel = new TemplateFormModel
+        {
+            Id = template.Id,
+            Name = template.Name,
+            Description = template.Description,
+            Markdown = template.Markdown,
+            Css = template.Css,
+            Group = template.Group,
+            IsShared = template.IsShared
+        };
+        isViewingOnly = false;
+        isEditMode = true;
+        formErrorMessage = null;
+    }
+
+    private void CancelForm()
+    {
+        if (isEditMode && selectedTemplate != null)
+        {
+            isViewingOnly = true;
+        }
+        else
+        {
+            showModal = false;
+        }
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        selectedTemplate = null;
+    }
+
+    private async Task SaveTemplateAsync()
+    {
+        formErrorMessage = null;
+        try
+        {
+            if (isEditMode && templateModel.Id.HasValue)
+            {
+                var request = new UpdatePageTemplateRequest(
+                    templateModel.Name,
+                    templateModel.Description,
+                    templateModel.Markdown,
+                    templateModel.Css,
+                    templateModel.Group,
+                    templateModel.IsShared
+                );
+                var updated = await TemplatesService.UpdateTemplateAsync(templateModel.Id.Value, request);
+                if (updated != null)
+                {
+                    showModal = false;
+                    await LoadGroupsAsync();
+                    await LoadTemplatesAsync();
+                }
+            }
+            else
+            {
+                var request = new CreatePageTemplateRequest(
+                    templateModel.Name,
+                    templateModel.Description,
+                    templateModel.Markdown,
+                    templateModel.Css,
+                    templateModel.Group,
+                    templateModel.IsShared
+                );
+                var created = await TemplatesService.CreateTemplateAsync(request);
+                if (created != null)
+                {
+                    showModal = false;
+                    await LoadGroupsAsync();
+                    await LoadTemplatesAsync();
+                }
+            }
+        }
+        catch (Exception)
+        {
+            formErrorMessage = "Could not save template. Please verify input fields.";
+        }
+    }
+
+    private async Task DeleteTemplateAsync(int templateId)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this template?");
+        if (!confirm) return;
+
+        try
+        {
+            await TemplatesService.DeleteTemplateAsync(templateId);
+            showModal = false;
+            await LoadGroupsAsync();
+            await LoadTemplatesAsync();
+        }
+        catch (Exception)
+        {
+            errorMessage = "Failed to delete template.";
+        }
+    }
+
+    public class TemplateFormModel
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string Markdown { get; set; } = string.Empty;
+        public string? Css { get; set; }
+        public string? Group { get; set; }
+        public bool IsShared { get; set; }
+    }
+}
