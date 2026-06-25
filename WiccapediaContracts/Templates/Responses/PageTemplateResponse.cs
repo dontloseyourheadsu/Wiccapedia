@@ -6,6 +6,8 @@ public record PageTemplateResponse(
     string? Description,
     string Markdown,
     string? Css,
+    string? BackgroundType,
+    string? BackgroundValue,
     string? Group,
     bool IsShared,
     int UserId,

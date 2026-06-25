@@ -9,6 +9,8 @@ public class NotebookPage
     public string Markdown { get; set; } = "";
     public bool IsCover { get; set; }
     public string? Css { get; set; }
+    public string? BackgroundType { get; set; } = "none";
+    public string? BackgroundValue { get; set; }
     public int? PreviousPageId { get; set; }
     public NotebookPage? PreviousPage { get; set; }
     public int? NextPageId { get; set; }

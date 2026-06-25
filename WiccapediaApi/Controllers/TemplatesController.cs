@@ -107,6 +107,8 @@ public class TemplatesController : ControllerBase
             Description = request.Description?.Trim(),
             Markdown = request.Markdown,
             Css = request.Css,
+            BackgroundType = request.BackgroundType ?? "none",
+            BackgroundValue = request.BackgroundValue,
             Group = request.Group?.Trim(),
             IsShared = request.IsShared,
             UserId = user.Id,
@@ -143,6 +145,8 @@ public class TemplatesController : ControllerBase
         template.Description = request.Description?.Trim();
         template.Markdown = request.Markdown;
         template.Css = request.Css;
+        template.BackgroundType = request.BackgroundType ?? "none";
+        template.BackgroundValue = request.BackgroundValue;
         template.Group = request.Group?.Trim();
         template.IsShared = request.IsShared;
         template.UpdatedAtUtc = DateTimeOffset.UtcNow;
@@ -211,6 +215,8 @@ public class TemplatesController : ControllerBase
             template.Description,
             template.Markdown,
             template.Css,
+            template.BackgroundType ?? "none",
+            template.BackgroundValue,
             template.Group,
             template.IsShared,
             template.UserId,

@@ -5,5 +5,7 @@ public record UpdatePageTemplateRequest(
     string? Description,
     string Markdown,
     string? Css,
+    string? BackgroundType,
+    string? BackgroundValue,
     string? Group,
     bool IsShared);

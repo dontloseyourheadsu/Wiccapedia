@@ -142,6 +142,12 @@ public class NotebooksController : ControllerBase
         page.Css = css;
         _context.Entry(page).Property(p => p.Css).IsModified = true;
 
+        page.BackgroundType = request.BackgroundType ?? "none";
+        _context.Entry(page).Property(p => p.BackgroundType).IsModified = true;
+
+        page.BackgroundValue = request.BackgroundValue;
+        _context.Entry(page).Property(p => p.BackgroundValue).IsModified = true;
+
         page.UpdatedAtUtc = DateTimeOffset.UtcNow;
         notebook.UpdatedAtUtc = DateTimeOffset.UtcNow;
 
@@ -175,6 +181,8 @@ public class NotebooksController : ControllerBase
 
         var markdown = string.Empty;
         string? css = null;
+        string backgroundType = "none";
+        string? backgroundValue = null;
 
         if (templateId.HasValue)
         {
@@ -184,6 +192,8 @@ public class NotebooksController : ControllerBase
             {
                 markdown = template.Markdown;
                 css = template.Css;
+                backgroundType = template.BackgroundType ?? "none";
+                backgroundValue = template.BackgroundValue;
             }
         }
 
@@ -192,6 +202,8 @@ public class NotebooksController : ControllerBase
             NotebookId = notebook.Id,
             Markdown = markdown,
             Css = css,
+            BackgroundType = backgroundType,
+            BackgroundValue = backgroundValue,
             IsCover = false,
             PreviousPageId = currentPage.Id,
             NextPageId = currentPage.NextPageId,
@@ -405,6 +417,8 @@ public class NotebooksController : ControllerBase
             page.Title,
             page.Markdown,
             page.Css,
+            page.BackgroundType ?? "none",
+            page.BackgroundValue,
             page.IsCover,
             page.PreviousPageId,
             page.NextPageId,

@@ -33,7 +33,7 @@ else
                 <div class="read-book">
                     @foreach (var page in ReadSpreadPages)
                     {
-                        <article class="read-page page-container-@(page.Id)">
+                        <article class="read-page page-container-@(page.Id)" style="@(WiccapediaGrimoire.Utils.CssHelper.GetBackgroundStyle(page.BackgroundType, page.BackgroundValue))">
                             @if (!string.IsNullOrWhiteSpace(page.Css))
                             {
                                 <style>
@@ -140,6 +140,40 @@ else
                         }
                         else
                         {
+                            <div class="code-toolbar bg-config-toolbar">
+                                <div class="bg-config-group">
+                                    <label>Background:</label>
+                                    <select class="control-select" value="@currentPageBackgroundType" @onchange="OnBackgroundTypeChanged">
+                                        <option value="none">None</option>
+                                        <option value="url">Image URL</option>
+                                        <option value="upload">Image Upload</option>
+                                        <option value="color">Color/CSS Style</option>
+                                    </select>
+                                </div>
+                                
+                                @if (currentPageBackgroundType == "url")
+                                {
+                                    <div class="bg-config-value">
+                                        <input class="control-input" placeholder="https://example.com/image.jpg" value="@currentPageBackgroundValue" @oninput="OnBackgroundValueInput" />
+                                    </div>
+                                }
+                                else if (currentPageBackgroundType == "color")
+                                {
+                                    <div class="bg-config-value">
+                                        <input class="control-input" placeholder="e.g. #1a0f26 or linear-gradient(...)" value="@currentPageBackgroundValue" @oninput="OnBackgroundValueInput" />
+                                    </div>
+                                }
+                                else if (currentPageBackgroundType == "upload")
+                                {
+                                    <div class="bg-config-value file-upload-wrapper">
+                                        <InputFile OnChange="HandleBgUpload" class="file-upload-input" accept="image/*" />
+                                        @if (currentPageBackgroundValue != null && currentPageBackgroundValue.StartsWith("data:"))
+                                        {
+                                            <span class="upload-badge success">Uploaded</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
                             <div class="code-toolbar">
                                 <span class="subtle">Custom style (CSS rules). Use <code>:self</code> to target the page container.</span>
                             </div>
@@ -203,7 +237,7 @@ else
                     </div>
                 }
 
-                <div class="preview-pane page-container-@currentPageId" @ondragover="HandleDragOver" @ondragover:preventDefault="true" @ondrop="HandleDropToEnd"
+                <div class="preview-pane page-container-@currentPageId" style="@(WiccapediaGrimoire.Utils.CssHelper.GetBackgroundStyle(currentPageBackgroundType, currentPageBackgroundValue))" @ondragover="HandleDragOver" @ondragover:preventDefault="true" @ondrop="HandleDropToEnd"
                      @ondrop:preventDefault="true">
                     @if (CurrentPage is not null && !string.IsNullOrWhiteSpace(currentPageCss))
                     {
@@ -364,6 +398,8 @@ else
     private string titleDraft = string.Empty;
     private string editorText = string.Empty;
     private string currentPageCss = string.Empty;
+    private string currentPageBackgroundType = "none";
+    private string currentPageBackgroundValue = string.Empty;
     private int currentPageId;
     private bool isLoading = true;
     private bool isReadMode = true;
@@ -471,6 +507,8 @@ else
                 ?? notebook.Pages.First().Id;
             editorText = CurrentPage?.Markdown ?? string.Empty;
             currentPageCss = CurrentPage?.Css ?? string.Empty;
+            currentPageBackgroundType = CurrentPage?.BackgroundType ?? "none";
+            currentPageBackgroundValue = CurrentPage?.BackgroundValue ?? string.Empty;
             RebuildFromEditorText();
         }
 
@@ -505,7 +543,7 @@ else
                 editorText = WiccapediaGrimoire.Utils.NotebookMarkup.NotebookComponentTranslator.Serialize(components);
             }
 
-            var updatedPage = await NotebooksService.UpdatePageAsync(notebook.Id, CurrentPage.Id, editorText, currentPageCss);
+            var updatedPage = await NotebooksService.UpdatePageAsync(notebook.Id, CurrentPage.Id, editorText, currentPageCss, currentPageBackgroundType, currentPageBackgroundValue);
             if (updatedPage is null)
             {
                 await ShowSnackbarAsync("Unable to save page.", true);
@@ -520,6 +558,8 @@ else
             currentPageId = updatedPage.Id;
             editorText = updatedPage.Markdown;
             currentPageCss = updatedPage.Css ?? string.Empty;
+            currentPageBackgroundType = updatedPage.BackgroundType ?? "none";
+            currentPageBackgroundValue = updatedPage.BackgroundValue ?? string.Empty;
 
             RebuildFromEditorText();
             await ShowSnackbarAsync("Page saved.");
@@ -553,6 +593,8 @@ else
         currentPageId = createdPage.Id;
         editorText = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.Markdown ?? string.Empty;
         currentPageCss = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.Css ?? string.Empty;
+        currentPageBackgroundType = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.BackgroundType ?? "none";
+        currentPageBackgroundValue = notebook?.Pages.FirstOrDefault(p => p.Id == currentPageId)?.BackgroundValue ?? string.Empty;
         RebuildFromEditorText();
     }
 
@@ -587,6 +629,8 @@ else
         currentPageId = CurrentPage.PreviousPageId.Value;
         editorText = CurrentPage?.Markdown ?? string.Empty;
         currentPageCss = CurrentPage?.Css ?? string.Empty;
+        currentPageBackgroundType = CurrentPage?.BackgroundType ?? "none";
+        currentPageBackgroundValue = CurrentPage?.BackgroundValue ?? string.Empty;
         RebuildFromEditorText();
     }
 
@@ -600,6 +644,8 @@ else
         currentPageId = CurrentPage.NextPageId.Value;
         editorText = CurrentPage?.Markdown ?? string.Empty;
         currentPageCss = CurrentPage?.Css ?? string.Empty;
+        currentPageBackgroundType = CurrentPage?.BackgroundType ?? "none";
+        currentPageBackgroundValue = CurrentPage?.BackgroundValue ?? string.Empty;
         RebuildFromEditorText();
     }
 
@@ -637,6 +683,42 @@ else
         showSaveTemplateModal = true;
     }
 
+    private void OnBackgroundTypeChanged(ChangeEventArgs e)
+    {
+        currentPageBackgroundType = e.Value?.ToString() ?? "none";
+        currentPageBackgroundValue = string.Empty; // Reset value when changing type
+    }
+
+    private void OnBackgroundValueInput(ChangeEventArgs e)
+    {
+        currentPageBackgroundValue = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task HandleBgUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null) return;
+
+        try
+        {
+            var buffer = new byte[file.Size];
+            using var stream = file.OpenReadStream(2 * 1024 * 1024); // 2MB limit
+            int bytesRead = 0;
+            int totalBytes = 0;
+            while ((bytesRead = await stream.ReadAsync(buffer, totalBytes, buffer.Length - totalBytes)) > 0)
+            {
+                totalBytes += bytesRead;
+            }
+
+            var base64 = Convert.ToBase64String(buffer, 0, totalBytes);
+            currentPageBackgroundValue = $"data:{file.ContentType};base64,{base64}";
+        }
+        catch (Exception)
+        {
+            await ShowSnackbarAsync("Failed to upload image. Size limit is 2MB.", true);
+        }
+    }
+
     private async Task SaveAsTemplateAsync()
     {
         if (string.IsNullOrWhiteSpace(newTemplateName))
@@ -650,9 +732,11 @@ else
             var request = new CreatePageTemplateRequest(
                 newTemplateName,
                 newTemplateDesc,
-                newTemplateGroup,
                 editorText,
                 currentPageCss,
+                currentPageBackgroundType,
+                currentPageBackgroundValue,
+                newTemplateGroup,
                 newTemplateIsShared
             );
 

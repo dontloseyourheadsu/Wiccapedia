@@ -41,11 +41,17 @@ public class NotebooksService
         return await response.Content.ReadFromJsonAsync<NotebookResponse>();
     }
 
-    public async Task<NotebookPageResponse?> UpdatePageAsync(int notebookId, int pageId, string markdown, string? css = null)
+    public async Task<NotebookPageResponse?> UpdatePageAsync(
+        int notebookId, 
+        int pageId, 
+        string markdown, 
+        string? css = null, 
+        string? backgroundType = null, 
+        string? backgroundValue = null)
     {
         var response = await _httpClient.PatchAsJsonAsync(
             $"api/notebooks/{notebookId}/pages/{pageId}",
-            new UpdateNotebookPageRequest(markdown, css));
+            new UpdateNotebookPageRequest(markdown, css, backgroundType, backgroundValue));
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<NotebookPageResponse>();
     }
